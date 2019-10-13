@@ -1,6 +1,7 @@
 {
 	"name": "frdl\/project",
 	"type": "project",
+	"license": ["MIT"],	
 	"repositories": [{
 		"type": "composer",
 		"url": "https:\/\/packages.frdl.de"
