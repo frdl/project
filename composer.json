@@ -1,7 +1,9 @@
 {
 	"name": "frdl\/project",
 	"type": "project",
-	"license": ["MIT"],	
+	"description": "Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application. ",
+	"license": ["MIT"],
+	"homepage" : "https://github.com/frdl/project",
 	"repositories": [{
 		"type": "composer",
 		"url": "https:\/\/packages.frdl.de"
