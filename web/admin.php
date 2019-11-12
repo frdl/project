@@ -106,7 +106,7 @@ Author URI: http://frdl.webfan.de
 * 
 *  - edited by webfan.de
 */
-namespace App\compiled\Instance\MimeStub2\MimeStubEntity431472153;
+namespace App\compiled\Instance\MimeStub2\MimeStubEntity366994514;
 use frdl;
 
 
@@ -2113,13 +2113,13 @@ call_user_func(function($version){
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/apc_config.php";name="stub apc_config.php"
-Content-Md5: b0fb2733089cffdd1a3fef0af29783d2
-Content-Sha1: b8482d69b3a27f4dde47996fd7e2749a15d1657c
+Content-Md5: 5b3e48ff2ea4a9e525310212cd58330f
+Content-Sha1: 0507a84be4d98bd90123d7c2276d9246f295d452
 Content-Length: 203
 
 <?php
 			    return array (
-  'hashed_password' => '$2y$10$qE5Df427EnCNVKGjESRAJ.n0pZxltPYcYJXzAPsA/8jJctcyvFs4G',
+  'hashed_password' => '$2y$10$phbFwUyWqhjEwKhEyLLHiOSKtE.YZUki8YAOSZzySP5e2jlh4jCN.',
   'workspace' => 'frdl.webfan.de',
   'installed_from_hps_blog_id' => 24,
 );
@@ -4666,8 +4666,8 @@ Content-Type: application/x-httpd-php
 
 <?php 
 			    return array (
-  'time' => 4482289,
-  'version' => '0.0.4.4482289',
+  'time' => 7135081,
+  'version' => '0.0.4.7135081',
 ); ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/Psr4Loader/RemoteFromWebfan.php" ; name="class Webfan\Psr4Loader\RemoteFromWebfan"
@@ -7112,7 +7112,7 @@ class Container implements \Psr\Container\ContainerInterface
 Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/App/Shield.php" ; name="class Webfan\App\Shield"
 Content-Type: application/x-httpd-php
 
-<?php 
+<?php  
 
 namespace Webfan\App;
 
@@ -7228,7 +7228,7 @@ class Shield implements \Finite\StatefulInterface, \Serializable
 	
 	
 	
-   public function &__get($name){
+   public function __get($name){
 	   
 	   if('updateAvailable' === $name){
 		  return !version_compare($this->getVersion(false), $this->v->latest, '>=');   
@@ -7397,7 +7397,7 @@ class Shield implements \Finite\StatefulInterface, \Serializable
 			  
 		    file_put_contents($tmpfname, base64_decode($result[1]['contents']));
            
-			  if(!\frdl\Lint\Php::lintFile($tmpfname, false)){
+			  if(!\frdl\Lint\Php::lintFileStatic($tmpfname, false)){
 				   unlink($tmpfname); 
 				  throw new \Exception('Php parsing error in installer stub found, update failed in '.$method);
 				  return false;  
@@ -7417,6 +7417,7 @@ class Shield implements \Finite\StatefulInterface, \Serializable
 			  $vm->location = $AppShield->getStub()->location;	
 			 unlink($tmpfname); 
 			  $AppShield->clearPeristant();
+			  usleep(100);
 		    return true;
 		  }catch(\Exception $e){
 			return false;  
@@ -7563,7 +7564,7 @@ PHPCODE
 	   
 
 	  $this->version = $this->stub->_run_php_1($this->stub->get_file($this->stub->document, '$HOME/version_config.php', 'stub version_config.php'));	 
-	  
+	  return $this->v;
   }
 	
 	
@@ -7690,11 +7691,21 @@ function() use($sk, $AppShield) {
  }
 	
 	
+	
+	
+	
+	
+	
+	
+	
   public function initialize(){
 
 //ini_set('display_errors',1);
 //error_reporting(\E_ALL);
-
+       ob_start();
+	  
+	  
+	  
 	  if(null === self::$instance){
 		  self::$instance = &$this;
 	  }
@@ -7705,17 +7716,38 @@ function() use($sk, $AppShield) {
 	  }
 	  
 	  
-	  $this->checkForAutoSelfUpdate(); 
 	  
+	  
+	  
+//call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), [$this, 'persist'] );	  
+	// call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), 'session_write_close' );	   	
+	  
+	  
+	  
+	  call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), function($sessionKey){
+		    if(isset($_SESSION[$sessionKey]) && isset($_SESSION[$sessionKey]['isAdmin']) && true === $_SESSION[$sessionKey]['isAdmin']){
+				$_SESSION[$sessionKey]['lasthit.admin'] = time();
+			}
+		   $_SESSION[$sessionKey]['lasthit'] = time();
+		   if(session_status() === \PHP_SESSION_ACTIVE)session_write_close();  
+	  }, self::SESSIONKEY);	
+	  
+	
+
+          $_ENV['FRDL_HPS_CACHE_DIR'] = $this->getCacheDir();
+	      $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = $this->getCacheDir('PSR4');
+	  
+  
+	  	 
+	
 	  
 	$this->getContainer()->register(new ShieldServiceProvider($this));
-	$this->getContainer()->register(new AppBuilderServiceProvider($this));  
+	//$this->getContainer()->register(new AppBuilderServiceProvider($this));   
 	  
+
 	  
-	 $this->emitter =  $this->getContainer()->get('emitter');
-	  
-	  $this->loadConfig();
-	  
+		 $this->emitter =  $this->getContainer()->get('emitter');  	  
+	   $this->loadConfig();	  
 	  
  if(!$this->session_started()){
 	session_start();
@@ -7733,34 +7765,9 @@ if(!isset($this->config->wsdir) ){
 }
 	  
 	  
-//call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), [$this, 'persist'] );	  
-	// call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), 'session_write_close' );	   	
-	  call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), function(){
-		   if(session_status() === \PHP_SESSION_ACTIVE)session_write_close();  
-	  });	
 	  
-	  
-	  $_ENV['FRDL_HPS_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_CACHE_DIR'])) ? $_ENV['FRDL_HPS_CACHE_DIR'] 
-                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR . get_current_user(). \DIRECTORY_SEPARATOR . 'cache-frdl' . \DIRECTORY_SEPARATOR
-					  );
-	  
-	  
-$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
-                   : $_ENV['FRDL_HPS_CACHE_DIR']. 'psr4'. \DIRECTORY_SEPARATOR
-					  );
 
-
-  $this->getV(isset($_REQUEST['force']) && 'update-check' === $_REQUEST['force']);
-	  
-//$this->config = new \webfan\hps\patch\ngScope([]);
-//$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - intval($this->latest->time);
-$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['autoupdate']) 
-													  || true === $this->config['autoupdate']
-													  || 'true' === $this->config['autoupdate'])) 
-													? intval($this->latest->time)
-													: 0),
-												   filemtime($this->stub->location));
-	  
+  $this->getV(isset($_REQUEST['force']) && 'update-check' === $_REQUEST['force']);	  
 	  
 	 if(!isset($_SESSION[self::SESSIONKEY]) 
 		//|| (isset($_SESSION[self::SESSIONKEY]['time']) && intval($_SESSION[self::SESSIONKEY]['time']) < time() - intval($this->latest->time) )
@@ -7772,11 +7779,23 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['auto
 	 }
 	  
 
-
+//$this->config = new \webfan\hps\patch\ngScope([]);
+//$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - intval($this->latest->time);
+$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['autoupdate']) 
+													  || true === $this->config['autoupdate']
+													  || 'true' === $this->config['autoupdate'])) 
+													? intval($this->latest->time)
+													: 0),
+												   filemtime($this->stub->location));	
 	  
 	  
-	  
-	  
+	$this->emitter->once('Shield.initialized', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){  
+	     $eventData['AppShield']->checkForAutoSelfUpdate(); 
+	});    
+	 
+  $this->emitter->once('before.compile', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+     $eventData['container']->register(new \Webfan\App\AppBuilderServiceProvider($eventData['AppShield']));
+  });		  
 	  
   $this->emitter->once('before.rpc', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
      $eventData['container']->register(new \Webfan\App\Rpc\RpcServiceProvider());
@@ -7785,31 +7804,62 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['auto
 	  
 	  
   $this->emitter->once('login.isAdmin::POST', function(){
-	  /*
+	
         \frdl\webfan\App::God(false)->refreshPageIf(1, 
 												function() {
-													return true;
+													return false;
 												},
 												function() { 
-
+                                                  die();
 												},
 												'<p>Welcome!</p><p>You will be redirected...</p>',
                                                  [ ]
 												);	  
-												*/
+	  /*											
 	  header('Location: '.$_SERVER['REQUEST_URI']);
-	  die('<a href="'.$_SERVER['REQUEST_URI'].'">continue...</a>');
+	  echo '<a href="'.$_SERVER['REQUEST_URI'].'">continue...</a>';
+	  ob_end_flush();
+	  die();*/
   });
 	  	  
 	  
 	  
+	  /*
+	   $this->emitter->once('isAdmin::POST', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+		   $FloodProtection =  $eventData[1]->getContainer()->get('floodprotection.login.admin');
+		   $FloodProtection->prune();
+       });	 
 	  
- 
+	  
+	  */
+	 
+	  
+   $this->emitter->once('isAdmin::POST', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+	                                  \frdl\webfan\App::God(false)->refreshPageIf(60, 
+												function() use($eventData){
+                       								$FloodProtection =  $eventData[1]->getContainer()->get('floodprotection.login.admin');
+													return !$FloodProtection->check($_SERVER['REMOTE_ADDR']);
+												},
+												function() { 
+											         header("HTTP/1.1 429 Too Many Requests");
+													ob_end_flush();
+													die();
+												},
+												'<p><error style="color:red;">Too Many Login Requests!</error><br />Please try again later!</p>',
+                                                 [ ]
+												);
+	   
+  });	 
 	  
 	  
 	  
-	  
-	  
+
+	 	   $this->emitter->once('login.failed', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData/* ['as'=>$_POST['username'],
+												  'REMOTE_ADDR'=>$_SEVER['REMOTE_ADDR'],
+												  'FORWARDED_FOR'=> (isset($_SEVER['HTTP_X_FORWARDED_FOR'])) ? $_SEVER['HTTP_X_FORWARDED_FOR'] : false ]*/){
+		         sleep(1);  
+            });	 
+	   
 	  
 	  
 	  
@@ -7973,43 +8023,7 @@ $stateMachineUser->setObject($this->container->get('webfan.app.shield.user') );
 	  
 $stateMachineUser->initialize();	  
 	    
-	  
-	  
-	  
 
-
-
-//\webfan\hps\patch\ngScope
-	  
-	 
-
-/*
-var_dump($stateMachine->getCurrentState()->getName());
-	  
-var_dump($stateMachine->getCurrentState()->getProperties());
-var_dump($stateMachine->getCurrentState()->has('deletable'));
-var_dump($stateMachine->getCurrentState()->has('printable'));
-// Available transitions
-var_dump($stateMachine->getCurrentState()->getTransitions());
-var_dump($stateMachine->can('load'));
-
-
-
-echo print_r(\$Container->get('finite.state_machine'), true);
-
-echo '<br />';
-
-//\$Container->get('finite.state_machine')->apply('load');
-echo '<br />';
-echo '<br />';
-var_dump(\$stateMachine->getCurrentState()->getName());
-
-echo print_r(\$Container->get('finite.state_machine'), true);
-
-
-
-var_dump(\$c->get(\Webfan\App\Shield::class)->getFiniteState());	
-*/
 	  
 	  
 	  if($this->isAdmin($stateMachineUser)){
@@ -8038,10 +8052,9 @@ var_dump(\$c->get(\Webfan\App\Shield::class)->getFiniteState());
 		 //  $stateMachine->apply('uninstalled');
 	  }	  
 	  
-//	  var_dump($stateMachineUser->getCurrentState()->getName());
-//	    var_dump($stateMachine->getCurrentState()->getName());
+
 	  
-	   $this->emitter->emit('Shield.initialized', [$this]);
+	   $this->emitter->emit('Shield.initialized', ['AppShield' => $this]);
   }
 	
 	
@@ -8058,9 +8071,10 @@ var_dump(\$c->get(\Webfan\App\Shield::class)->getFiniteState());
 
 	  if('POST'===$_SERVER['REQUEST_METHOD'] && isset($_POST['op_login']) ){
 		 //todo bruteforce protection
+		
 		   $this->emitter->emit('isAdmin::POST', [$_POST, $this]);
 	 
-	  
+
 	   if('POST'===$_SERVER['REQUEST_METHOD'] 
 		 && isset($_POST['op_login']) 
 		 && isset($_POST['username']) 
@@ -8074,12 +8088,13 @@ var_dump(\$c->get(\Webfan\App\Shield::class)->getFiniteState());
 		
 		){
 		  $_SESSION[self::SESSIONKEY]['isAdmin'] = true;
-		  $this->emitter->emit('login.isAdmin::POST', [$this]);
+		   $this->emitter->emit('login.isAdmin::POST', []);
 	     }else{
-		     sleep(2);  
+		    
 		     $this->emitter->emit('login.failed', ['as'=>$_POST['username'],
-												  'REMOTE_ADDR'=>$_SEVER['REMOTE_ADDR'],
-												  'FORWARDED_FOR'=> (isset($_SEVER['HTTP_X_FORWARDED_FOR'])) ? $_SEVER['HTTP_X_FORWARDED_FOR'] : false ]);
+												  'REMOTE_ADDR'=>$_SERVER['REMOTE_ADDR'],
+												  'FORWARDED_FOR'=> (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : false ]); 
+		     
 	    }
 	  
 	  }	   
@@ -8094,7 +8109,8 @@ var_dump(\$c->get(\Webfan\App\Shield::class)->getFiniteState());
 	if(!isset($this->config->NODE_PATH))return false;  
 	if(!isset($this->config->NPM_PATH))return false;  
 	if(!isset($this->config->FRDLJS_PATH))return false;  
-	if(!isset($this->config->wsdir) || !is_dir($this->config->wsdir) )return false;
+	//if(!isset($this->config->wsdir) || !is_dir($this->config->wsdir) )return false;
+	  if(!isset($this->config->wsdir) )return false;
 	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::WORKSPACES_FILENAME) )return false;
 	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::CONFIG_FILENAME) )return false;	  
 	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::VERSION_FILENAME) )return false;	  
@@ -8106,7 +8122,8 @@ var_dump(\$c->get(\Webfan\App\Shield::class)->getFiniteState());
 	if(!isset($this->config->NODE_PATH))return false;  
 	if(!isset($this->config->NPM_PATH))return false;  
 	if(!isset($this->config->FRDLJS_PATH))return false; 
-	if(!isset($this->config->wsdir) || !is_dir($this->config->wsdir) )return false;
+//	if(!isset($this->config->wsdir) || !is_dir($this->config->wsdir) )return false;
+	  if(!isset($this->config->wsdir) )return false;
 	return true;  
   }
 		
@@ -8351,6 +8368,12 @@ class ShieldServiceProvider extends \frdl\ServiceProvider
       return new \Datto\JsonRpc\Client();
    });
 		
+		
+   $container->set( 'floodprotection.login.admin', function(\UMA\DIC\Container $c) {
+      return new \frdl\security\floodprotection\FloodProtection('isAdmin::POST', 6, 90);		
+   });		
+		
+		
   }
 	
 	
@@ -8441,7 +8464,9 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 
 </style>
 
-	
+<link href="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/cdn/application/<?php 
+			echo date('Y').date('W').'.'.max($this->AppShield->latest->time, 1).$this->AppShield->getVersion(false);
+?>/node_modules/bootstrap-4/css/bootstrap-min.css" type="text/css" rel="stylesheet">	
 <script>
 document.addEventListener('DOMContentLoaded', function(){	
   process.once('registerComponent::after', function(){	
@@ -8645,6 +8670,287 @@ class ShutdownTasks {
 		}
     }
 
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/App/Rpc/RpcServiceProvider.php" ; name="class Webfan\App\Rpc\RpcServiceProvider"
+Content-Type: application/x-httpd-php
+
+<?php 
+
+namespace Webfan\App\Rpc;
+
+class RpcServiceProvider extends \frdl\ServiceProvider
+{
+	
+	public function __invoke(\Psr\Container\ContainerInterface $container) : void{
+
+		
+	
+  $container->set('webfan.app.rpc.auth-shield', function(\UMA\DIC\Container $c) {
+    return new \Webfan\App\Rpc\AuthShield($c->get('webfan.app.shield'), $c);
+ });		
+		
+	  
+  $container->set( 'webfan.app.rpc.server', function(\UMA\DIC\Container $c) {
+           $server = new \UMA\JsonRpc\Server($c, 50);
+	       $server->attach('webfan.app.rpc.auth-shield');
+	   
+	        $server->set('test', \Webfan\App\Rpc\Procedure\test::class);
+			$server->set('install.requirements', \Webfan\App\Rpc\Procedure\install_requirements::class);
+			$server->set('install.config.get', \Webfan\App\Rpc\Procedure\install_config_get::class);
+			$server->set('install.config.set', \Webfan\App\Rpc\Procedure\install_config_set::class);
+			$server->set('install.update self', \Webfan\App\Rpc\Procedure\install_update_self::class);
+			$server->set('mkdir', \Webfan\App\Rpc\Procedure\MkdirProcedure::class);		
+			$server->set('install.feature.composer', \Webfan\App\Rpc\Procedure\install_feature_composer::class);	
+			$server->set('install.feature.frdl', \Webfan\App\Rpc\Procedure\install_feature_frdl::class);
+			$server->set('install.installer.stub', \Webfan\App\Rpc\Procedure\install_installer_stub::class);
+			$server->set('frdl.project.create', \Webfan\App\Rpc\Procedure\frdl_project_create::class);
+			$server->set('frdl.projects.get', \Webfan\App\Rpc\Procedure\frdl_projects_get::class);
+	        $server->set('frdl.project.read', \Webfan\App\Rpc\Procedure\frdl_project_read::class);
+	        $server->set('frdl.compile', \Webfan\App\Rpc\Procedure\frdl_compile::class);
+	        $server->set('read', \Webfan\App\Rpc\Procedure\read::class);
+	        $server->set('composer.install', \Webfan\App\Rpc\Procedure\composer_install::class);
+	        $server->set('composer.save', \Webfan\App\Rpc\Procedure\composer_save::class);
+			$server->set('composer.projects.get', \Webfan\App\Rpc\Procedure\composer_projects_get::class);
+	        $server->set('composer.clearcache', \Webfan\App\Rpc\Procedure\composer_clearcache::class);
+	        $server->set('frdl.compile.js', \Webfan\App\Rpc\Procedure\frdl_bundlejs::class);
+	  
+	
+	        $server->set('frdl.module.configs.get', \Webfan\App\Rpc\Procedure\frdl_modules_configs_get::class);
+	        $server->set('frdl.config.module.get', \Webfan\App\Rpc\Procedure\frdl_module_config_get::class);
+	        $server->set('frdl.config.module.set', \Webfan\App\Rpc\Procedure\frdl_config_module_set::class);
+	        $server->set('frdl.config.module.defaults', \Webfan\App\Rpc\Procedure\frdl_config_module_defaults::class);
+	  
+	   return $server;
+   });		
+		
+		
+		
+		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\test::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\test($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});				
+	
+		
+		$container->set(\Webfan\App\Rpc\Procedure\install_requirements::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_requirements($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});				
+	
+		
+		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\install_config_get::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_config_get($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});				
+			
+		$container->set(\Webfan\App\Rpc\Procedure\install_config_set::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_config_set($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});				
+						
+		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\install_update_self::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_update_self($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});				
+
+	
+		$container->set(\Webfan\App\Rpc\Procedure\MkdirProcedure::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\MkdirProcedure($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});				
+
+		
+	
+		$container->set(\Webfan\App\Rpc\Procedure\install_feature_composer::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_feature_composer($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});			
+		
+		
+	
+		$container->set(\Webfan\App\Rpc\Procedure\install_installer_stub::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_installer_stub($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});			
+		
+	
+		$container->set(\Webfan\App\Rpc\Procedure\install_feature_frdl::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_feature_frdl($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+	
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_project_create::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\frdl_project_create($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});			
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_projects_get::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\frdl_projects_get($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});													
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_project_read::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\frdl_project_read($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\read::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\read($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\composer_install::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\composer_install($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+			
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_compile::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_compile($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\composer_save::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\composer_save($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});			
+		
+		$container->set(\Webfan\App\Rpc\Procedure\composer_projects_get::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\composer_projects_get($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\composer_clearcache::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\composer_clearcache($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});	
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_bundlejs::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_bundlejs($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_modules_configs_get::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_modules_configs_get($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});			
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_module_config_get::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_module_config_get($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_config_module_set::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_config_module_set($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});	
+			
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_config_module_defaults::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_config_module_defaults($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});	
+	}
+	
+	
+	
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/App/Rpc/AuthShield.php" ; name="class Webfan\App\Rpc\AuthShield"
+Content-Type: application/x-httpd-php
+
+<?php 
+//declare(strict_types=1);
+
+namespace Webfan\App\Rpc;
+
+
+
+class AuthShield implements \UMA\JsonRpc\Middleware
+{
+
+	protected $digData;	
+	protected $_SERVER;
+	protected $AppShield;
+	
+	
+	
+	public function __construct( \Webfan\App\Shield $AppShield, \Psr\Container\ContainerInterface $container = null){
+		 $this->AppShield=$AppShield;
+		 $this->container=(null!==$container) ? $container : $this->AppShield->getContainer();
+	}
+	
+	
+    public function getApp(){
+		return $this->AppShield;
+	}
+    public function getAppShield(){
+		return $this->getApp();
+	}	
+    public function getShield(){
+		return $this->getAppShield();
+	}
+
+
+		
+    public function __invoke(\UMA\JsonRpc\Request $request, \UMA\JsonRPC\Procedure $next): \UMA\JsonRpc\Response
+    {
+		
+		if(is_callable([$next, 'auth']) && true === $next->auth($request)){
+				 return $next($request);
+		}elseif(is_callable([$next, 'isAuthenticated']) && true === $next->isAuthenticated($request)){
+				 return $next($request);
+		}
+		
+		if(null !== $this->container && 'admin' === $this->container->get('webfan.app.fsm.user')->getCurrentState()->getName() ){
+          return $next($request);
+		}
+		
+		return \webfan\hps\Api\Error::unauthorized();
+    }
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/App/Rpc/Procedure/install_config_get.php" ; name="class Webfan\App\Rpc\Procedure\install_config_get"
+Content-Type: application/x-httpd-php
+
+<?php 
+declare(strict_types=1);
+
+namespace Webfan\App\Rpc\Procedure;
+
+
+
+
+class install_config_get implements \UMA\JsonRpc\Procedure
+{
+	protected $AuthShield;
+	protected $container;
+	public function __construct(\Webfan\App\Rpc\AuthShield $AuthShield, \Psr\Container\ContainerInterface $container = null){
+		$this->AuthShield = $AuthShield;
+		$this->container=(null!==$container) ? $container : $AuthShield->getAppShield()->getContainer();
+	}	
+	
+	
+	public function auth(\UMA\JsonRpc\Request $request){
+	  return 'admin' === $this->container->get('webfan.app.fsm.user')->getCurrentState()->getName();	
+	}
+	
+    /**
+     * {@inheritdoc}
+     */
+    public function __invoke(\UMA\JsonRpc\Request $request): \UMA\JsonRpc\Response
+    {
+
+		$params = $request->params();
+		$config = $this->AuthShield->getAppShield()->getConfig()->export();
+		unset($config['hashed_password']);
+
+		try{    
+			return new \UMA\JsonRpc\Success($request->id(), $config);
+		}catch(\Exception $e){	
+			return new \UMA\JsonRpc\Error($request->id(), 'Could get config');
+		}
+    }
+
+
+    public function getSpec(): ?\stdClass
+    {
+        return \json_decode(<<<'JSON'
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": ["null", "array", "object"],
+  "properties": {
+
+  },
+  "required" : [],
+  "additionalProperties": true
+}
+JSON
+        );
+    }
 } ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$DIR_PSR4/webfan/hps/patch/Fs.php" ; name="class webfan\hps\patch\Fs"
