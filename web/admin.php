@@ -106,7 +106,7 @@ Author URI: http://frdl.webfan.de
 * 
 *  - edited by webfan.de
 */
-namespace App\compiled\Instance\MimeStub2\MimeStubEntity366994514;
+namespace App\compiled\Instance\MimeStub2\MimeStubEntity829828063;
 use frdl;
 
 
@@ -2075,6 +2075,44 @@ if ( !function_exists('sys_get_temp_dir')) {
 	
 
 
+call_user_func(function(){
+	
+$getRootDir;	
+ $getRootDir = (function($path = null) use(&$getRootDir){
+	if(null===$path){
+		$path = $_SERVER['DOCUMENT_ROOT'];
+	}
+
+		
+ if(''!==dirname($path) && '/'!==dirname($path) //&& @chmod(dirname($path), 0755) 
+    &&  true===@is_writable(dirname($path))
+    ){
+ 	return $getRootDir(dirname($path));
+ }else{
+ 	return $path;
+ }
+
+ });//end of $getRootDir
+
+
+$_ENV['FRDL_HPS_CACHE_DIR'] = $getRootDir($_SERVER['DOCUMENT_ROOT']) 
+	. \DIRECTORY_SEPARATOR 
+	. '.frdl' . \DIRECTORY_SEPARATOR .\get_current_user() . \DIRECTORY_SEPARATOR. 'cache'. \DIRECTORY_SEPARATOR;
+putenv('FRDL_HPS_CACHE_DIR='.$_ENV['FRDL_HPS_CACHE_DIR']);
+
+
+$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = rtrim($_ENV['FRDL_HPS_CACHE_DIR'], \DIRECTORY_SEPARATOR).\DIRECTORY_SEPARATOR.'psr4'.\DIRECTORY_SEPARATOR;
+putenv('FRDL_HPS_PSR4_CACHE_DIR='.$_ENV['FRDL_HPS_PSR4_CACHE_DIR']);
+
+
+$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - filemtime($this->location);
+
+/*
+$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
+                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR .\get_current_user() . \DIRECTORY_SEPARATOR. 'cache-frdl' . \DIRECTORY_SEPARATOR. 'psr4'. \DIRECTORY_SEPARATOR
+					  );
+*/
+});
 
 spl_autoload_register(array($this,'Autoload'), true, true);
 
@@ -2113,13 +2151,13 @@ call_user_func(function($version){
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/apc_config.php";name="stub apc_config.php"
-Content-Md5: 5b3e48ff2ea4a9e525310212cd58330f
-Content-Sha1: 0507a84be4d98bd90123d7c2276d9246f295d452
+Content-Md5: ce619544c7dabdedaa861ffc17728014
+Content-Sha1: ee1e8598dbe1b32cd8acaf56a05488a74d3fb1cd
 Content-Length: 203
 
 <?php
 			    return array (
-  'hashed_password' => '$2y$10$phbFwUyWqhjEwKhEyLLHiOSKtE.YZUki8YAOSZzySP5e2jlh4jCN.',
+  'hashed_password' => '$2y$10$yQKAsQvzQI2j3o22ciOlRuZMXsnnJjd8f.fgdvdgbfd/iwP.TjTgy',
   'workspace' => 'frdl.webfan.de',
   'installed_from_hps_blog_id' => 24,
 );
@@ -2129,12 +2167,17 @@ Content-Length: 203
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/detect.php";name="stub detect.php"
-Content-Md5: b327b348a2fa418beb4609427d307469
-Content-Sha1: 95c86c97aa63adc7c58e686dbcb131e32aed3aa8
-Content-Length: 5271
+Content-Md5: 07112dbe387000ca277df9c35598f59c
+Content-Sha1: d25ef3209f632723a28dd80117267e91c90b5e19
+Content-Length: 5810
 
 
-
+	          ini_set("session.auto_start" , '0'); // Auto-start session
+              ini_set("session.gc_probability" , 10); // Garbage collection in % MUST be > 0
+              ini_set("session.serialize_handler", 'php'); // How to store data
+              ini_set("session.use_cookies" , '1'); // Use cookie to store the session ID
+              ini_set("session.gc_maxlifetime" , 24 * 60 * 60); // Sekunden Inactivity timeout for user sessions
+              ini_set("url_rewriter.tags" , ''); // verhindern, dass SID an URL gehaengt wird
 
   \frdl\webfan\Autoloading\SourceLoader::top() -> unregister(array(\frdl\webfan\Autoloading\SourceLoader::top(),'autoloadClassFromServer'));	
 
@@ -2416,10 +2459,7 @@ Content-Disposition: php ;filename="$HOME/index.php";name="stub index.php"
 //error_reporting(\E_ALL);
 
 
-$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - filemtime($this->location);
-$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
-                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR .\get_current_user() . \DIRECTORY_SEPARATOR. 'cache-frdl' . \DIRECTORY_SEPARATOR. 'psr4'. \DIRECTORY_SEPARATOR
-					  );
+
 /*
 if( (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) && intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])=== -1) ){
 	\webfan\hps\patch\Fs::pruneDir($_ENV['FRDL_HPS_PSR4_CACHE_DIR'], 0, true, false);
@@ -2533,7 +2573,7 @@ Content-Disposition: php ;filename="$DIR_LIB/frdl/A.php";name="class frdl\A"
  	
   const FN_ASPECTS = 'aspects';	
      /**
-    *  default $SEMRÃ‚Â´s
+    *  default $SEMRÂ´s
 	*  const  SERVER_ROUTER = {$cmd=SERVER} . {$format} . {$modul} . {$outputbuffers = explode(',')} 
 	*/
 	const TPL_SERVER_ROUTE = '{$cmd}.{$responseformat}.{$modul}.{$responsebuffers}';
@@ -4666,8 +4706,8 @@ Content-Type: application/x-httpd-php
 
 <?php 
 			    return array (
-  'time' => 7135081,
-  'version' => '0.0.4.7135081',
+  'time' => 1579458374,
+  'version' => '0.0.6.184727',
 ); ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/Psr4Loader/RemoteFromWebfan.php" ; name="class Webfan\Psr4Loader\RemoteFromWebfan"
@@ -4881,7 +4921,7 @@ Content-Type: application/x-httpd-php
 /**
  * Dot - PHP dot notation access to arrays
  *
- * @author  Riku SÃƒÂƒÃ‚Â¤rkinen <riku@adbar.io>
+ * @author  Riku SÃÂ¤rkinen <riku@adbar.io>
  * @link    https://github.com/adbario/php-dot-notation
  * @license https://github.com/adbario/php-dot-notation/blob/2.x/LICENSE.md (MIT License)
  */
@@ -5489,7 +5529,7 @@ class i extends \UMA\DIC\Container implements ContainerInterface
     protected $factories;
 	protected $container;
 	
-    protected function __construct(array $entries = null){   
+    public function __construct(array $entries = null){   
 	   $this->factories = new \SplObjectStorage();
      //  $this->container = (is_object($entries) && $entries instanceof \webfan\hps\patch\ngScope) ? $entries : new \webfan\hps\patch\ngScope($entries);
 		$this->container = (null===$entries) ? [] : $entries;
@@ -7160,21 +7200,7 @@ class Shield implements \Finite\StatefulInterface, \Serializable
     public static function getInstance($stub = null, \Psr\Container\ContainerInterface $container = null){
 	   if(null === self::$instance){
 		 
-	
-		 /*    
-		  if(isset($_SESSION[self::SESSIONKEY]['webfan.app.shield'])){
-			  self::$instance = unserialize($_SESSION[self::SESSIONKEY]['webfan.app.shield']);
-			  self::$instance
-				    ->setStub($stub)
-				    ->setContainer($container)
-				  ; 
-			  self::$instance->initialize();
-		  }else{
-			 self::$instance = new self((null===$container) ? \frdl\i::c() : $container, $stub, true); 
-		  }
-		 
-		    */
-		   
+
 		   
 		 
 		  self::$instance = new self((null===$container) ? \frdl\i::c() : $container, $stub, true); 
@@ -7208,7 +7234,7 @@ class Shield implements \Finite\StatefulInterface, \Serializable
 
  		
 	
- while($ob_status = ob_get_status(false) && 0 < count($ob_status) && $ob_status[0]['status'] !== \PHP_OUTPUT_HANDLER_END && ob_get_level()){
+ while($ob_status = ob_get_status(false) && (is_array($ob_status) && 0 < count($ob_status) ) && $ob_status[0]['status'] !== \PHP_OUTPUT_HANDLER_END && ob_get_level()){
     ob_end_flush();
  }
 	
@@ -7414,9 +7440,11 @@ class Shield implements \Finite\StatefulInterface, \Serializable
 			  ')
 			  ;			  
 			  
+			  $time = time();
 			  $vm->location = $AppShield->getStub()->location;	
 			 unlink($tmpfname); 
 			  $AppShield->clearPeristant();
+			  \webfan\hps\patch\Fs::pruneDir($AppShield->getCacheDir('PSR4'), time() -  max(filemtime($vm->location), $time), true, true);
 			  usleep(100);
 		    return true;
 		  }catch(\Exception $e){
@@ -7556,6 +7584,7 @@ PHPCODE
 	$this->latest = $this->v->versions->{$this->v->latest};	  
 	//$this->config->latest=$this->latest; 
 	  
+	  
 //	if(isset($this->config['imports']) 
 //	   && isset($this->config['imports']['frdl.version.php'])   
 //	   ){
@@ -7576,7 +7605,7 @@ $sk = 'already_refreshed_'.sha1(__FILE__. ' '.$latest_time);
 $stub_time = filemtime($this->stub->location);	 
 $AppShield = $this;	
 	
-	if((session_id()!='' || session_start()) && isset($_SESSION[$sk]) && intval($_SESSION[$sk])>=2){
+	if((session_id()!='' || session_start()) && isset($_SESSION[$sk]) && intval($_SESSION[$sk])>=20){
 		$_SESSION[$sk]++;
 		if($_SESSION[$sk]>25){
 		  unset($_SESSION[$sk]);	
@@ -7585,12 +7614,12 @@ $AppShield = $this;
 
 	\frdl\webfan\App::God(false)->refreshPageIf(2, 
 												function() use($sk, $AppShield){
-													return (session_id()!='' || session_start()) && isset($_SESSION[$sk]) && 1 === intval($_SESSION[$sk]) && 'GET' === $_SERVER['REQUEST_METHOD']	    
+													return (session_id()!='' || session_start()) && isset($_SESSION[$sk]) && 20 === intval($_SESSION[$sk]) && 'GET' === $_SERVER['REQUEST_METHOD']	    
 														? false
 														: true;
 												},
 												function() use($sk, $AppShield){ 
-												   $_SESSION[$sk]=2; 
+												   $_SESSION[$sk]=21; 
 												// 	$AppShield->terminate();
 													die();
 												},
@@ -7607,7 +7636,7 @@ $AppShield = $this;
 														: true;
 												},
 												function() use($sk, $AppShield){ 
-												   $_SESSION[$sk]=1; 
+												   $_SESSION[$sk]=20; 
 													
 												 	$AppShield->terminate();
 													// call_user_func_array(\frdlweb\Thread\ShutdownTasks::mutex(), [function($AppShield){
@@ -7724,13 +7753,7 @@ function() use($sk, $AppShield) {
 	  
 	  
 	  
-	  call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), function($sessionKey){
-		    if(isset($_SESSION[$sessionKey]) && isset($_SESSION[$sessionKey]['isAdmin']) && true === $_SESSION[$sessionKey]['isAdmin']){
-				$_SESSION[$sessionKey]['lasthit.admin'] = time();
-			}
-		   $_SESSION[$sessionKey]['lasthit'] = time();
-		   if(session_status() === \PHP_SESSION_ACTIVE)session_write_close();  
-	  }, self::SESSIONKEY);	
+
 	  
 	
 
@@ -7749,9 +7772,18 @@ function() use($sk, $AppShield) {
 		 $this->emitter =  $this->getContainer()->get('emitter');  	  
 	   $this->loadConfig();	  
 	  
+	  
+	  
+	  			 
+
+	  
  if(!$this->session_started()){
 	session_start();
   }
+	  
+	 
+ 
+	  
 	  
 	  
 $this->config->baseUrl = (isset($this->config->baseUrl)) ? $this->config->baseUrl : \webfan\hps\patch\Fs::getPathUrl();
@@ -7779,6 +7811,21 @@ if(!isset($this->config->wsdir) ){
 	 }
 	  
 
+	  
+	  call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), function($sessionKey){
+		    if(isset($_SESSION[$sessionKey]) && isset($_SESSION[$sessionKey]['isAdmin']) && true === $_SESSION[$sessionKey]['isAdmin']){
+				$_SESSION[$sessionKey]['lasthit.admin'] = time();
+				$_SESSION[$sessionKey]['isAdmin'] = true;
+			}
+		   $_SESSION[$sessionKey]['lasthit'] = time();
+		  // if(session_status() === \PHP_SESSION_ACTIVE)session_write_close();  
+	  }, self::SESSIONKEY);		 	  
+	  
+	  
+	  
+	  
+	  
+	  
 //$this->config = new \webfan\hps\patch\ngScope([]);
 //$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - intval($this->latest->time);
 $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['autoupdate']) 
@@ -7788,22 +7835,42 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['auto
 													: 0),
 												   filemtime($this->stub->location));	
 	  
+	$this->emitter->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
+	     $projectDir = rtrim($projectDir, \DIRECTORY_SEPARATOR);
+		 $file = $projectDir.\DIRECTORY_SEPARATOR.'vendor'.\DIRECTORY_SEPARATOR.'autoload.php';
+		 if(file_exists($file)){
+			require_once $file; 
+		 }
+	});    
 	  
-	$this->emitter->once('Shield.initialized', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){  
+	  
+	  
+	$this->emitter->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
+	     $projectDir = rtrim($projectDir, \DIRECTORY_SEPARATOR);
+		 $d = $projectDir.\DIRECTORY_SEPARATOR.'compiled'.\DIRECTORY_SEPARATOR.'~events'.\DIRECTORY_SEPARATOR;
+         if(!is_dir($d)){
+            mkdir($d, 0755, true);
+         }
+         \Webfan\App\EventModule::setBaseDir($d);
+	});    
+	  
+	  
+	  
+	$this->emitter->once('Shield.initialized',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){  
 	     $eventData['AppShield']->checkForAutoSelfUpdate(); 
 	});    
 	 
-  $this->emitter->once('before.compile', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+  $this->emitter->once('before.compile',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
      $eventData['container']->register(new \Webfan\App\AppBuilderServiceProvider($eventData['AppShield']));
   });		  
 	  
-  $this->emitter->once('before.rpc', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+  $this->emitter->once('before.rpc',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
      $eventData['container']->register(new \Webfan\App\Rpc\RpcServiceProvider());
   });	 
 	  
 	  
 	  
-  $this->emitter->once('login.isAdmin::POST', function(){
+  $this->emitter->once('login.isAdmin::POST',static function(){
 	
         \frdl\webfan\App::God(false)->refreshPageIf(1, 
 												function() {
@@ -7834,7 +7901,7 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['auto
 	  */
 	 
 	  
-   $this->emitter->once('isAdmin::POST', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+   $this->emitter->once('isAdmin::POST',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
 	                                  \frdl\webfan\App::God(false)->refreshPageIf(60, 
 												function() use($eventData){
                        								$FloodProtection =  $eventData[1]->getContainer()->get('floodprotection.login.admin');
@@ -7854,7 +7921,7 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - max((((!isset($this->config['auto
 	  
 	  
 
-	 	   $this->emitter->once('login.failed', function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData/* ['as'=>$_POST['username'],
+	 	   $this->emitter->once('login.failed',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData/* ['as'=>$_POST['username'],
 												  'REMOTE_ADDR'=>$_SEVER['REMOTE_ADDR'],
 												  'FORWARDED_FOR'=> (isset($_SEVER['HTTP_X_FORWARDED_FOR'])) ? $_SEVER['HTTP_X_FORWARDED_FOR'] : false ]*/){
 		         sleep(1);  
@@ -7923,7 +7990,7 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
 				   'properties' => [
 					         'wsdir' => (isset($this->config->wsdir)) ? $this->config->wsdir : false,
 					   ],
-            'configure_properties' => function(\Symfony\Component\OptionsResolver\OptionsResolver $optionsResolver) {
+            'configure_properties' => static function(\Symfony\Component\OptionsResolver\OptionsResolver $optionsResolver) {
                 $optionsResolver->setRequired('wsdir');
             }],
 		
@@ -7934,7 +8001,7 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
 				  'properties' => [
 					         'wsdir' => (isset($this->config->wsdir)) ? $this->config->wsdir : false,
 					   ],
-            'configure_properties' => function(\Symfony\Component\OptionsResolver\OptionsResolver $optionsResolver) {
+            'configure_properties' => static function(\Symfony\Component\OptionsResolver\OptionsResolver $optionsResolver) {
                 $optionsResolver->setRequired('wsdir');
             }],
 
@@ -7944,7 +8011,7 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
 				  'properties' => [
 					         'wsdir' => (isset($this->config->wsdir)) ? $this->config->wsdir : false,
 					   ],
-            'configure_properties' => function(\Symfony\Component\OptionsResolver\OptionsResolver $optionsResolver) {
+            'configure_properties' => static function(\Symfony\Component\OptionsResolver\OptionsResolver $optionsResolver) {
                 $optionsResolver->setRequired('wsdir');
             }],		
 		
@@ -7955,7 +8022,7 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
         'after' => [
             [              			 
 			   'to' => ['run'], 
-			   'do' =>  function(\Finite\StatefulInterface $AppShield, \Finite\Event\TransitionEvent $e) {
+			   'do' =>  static function(\Finite\StatefulInterface $AppShield, \Finite\Event\TransitionEvent $e) {
 				  //  $sm = $AppShield->getContainer()->get('webfan.app.fsm');
 				      chdir($AppShield->config->wsdir);
                     
@@ -8002,7 +8069,7 @@ $userLoader       = new \Finite\Loader\ArrayLoader([
         'after' => [
             [              			 
 			   'to' => ['logout'], 
-			   'do' =>  function(\Finite\StatefulInterface $AppShield, \Finite\Event\TransitionEvent $e) {
+			   'do' => static function(\Finite\StatefulInterface $AppShield, \Finite\Event\TransitionEvent $e) {
                  //   echo 'Applying transition '.$e->getTransition()->getName(), "\n";
 				     if(isset($_SESSION[self::SESSIONKEY]['isAdmin'])){
 						 unset($_SESSION[self::SESSIONKEY]['isAdmin']);
@@ -8294,16 +8361,16 @@ class ShieldServiceProvider extends \frdl\ServiceProvider
 		
      $container->set( 'webfan.app.shield.$::class', get_class($this->AppAhield));	
 		
-   $container->factory(\frdl\webfan\App::class, function(\UMA\DIC\Container $c) {
+   $container->factory(\frdl\webfan\App::class, static function(\UMA\DIC\Container $c) {
       return \frdl\webfan\App::God(false);
    });		
 
-   $container->factory('global', function(\UMA\DIC\Container $c) {
+   $container->factory('global',static function(\UMA\DIC\Container $c) {
       return $c->get(\frdl\webfan\App::class);
    });		
 		
    $stub = $this->AppAhield->getStub(); 	  
-   $container->factory('webfan.app.shield', function(\UMA\DIC\Container $c) use($stub) {
+   $container->factory('webfan.app.shield',static function(\UMA\DIC\Container $c) use($stub) {
 	   $class = $c->get( 'webfan.app.shield.$::class');
 	   return call_user_func_array($class.'::getInstance', [$stub, $c]);
     //   return Shield::getInstance($stub, $c);
@@ -8319,24 +8386,24 @@ class ShieldServiceProvider extends \frdl\ServiceProvider
 	  
 	  
 	  
-   $container->factory( __CLASS__, function(\UMA\DIC\Container $c) {	   
+   $container->factory( __CLASS__,static function(\UMA\DIC\Container $c) {	   
       return  $c->get( 'webfan.app.shield');
    });
 // $mutex = new \malkusch\lock\mutex\FlockMutex(fopen($this->getLockFile($this), "r"));
-   $container->factory('webfan.app.mutex.lock.stub', function(\UMA\DIC\Container $c) {
+   $container->factory('webfan.app.mutex.lock.stub',static function(\UMA\DIC\Container $c) {
        return new \malkusch\lock\mutex\FlockMutex(fopen($c->get( 'webfan.app.shield')->getLockFile($c->get( 'webfan.app.shield')), "r"));
    });	  
 	  
 
-  $container->set( 'webfan.app.fsm', function(\UMA\DIC\Container $c) {
+  $container->set( 'webfan.app.fsm',static function(\UMA\DIC\Container $c) {
       return new \Finite\StateMachine\StateMachine($c->get(__CLASS__));
    });
 	  
-   $container->set( 'webfan.app.fsm.user', function(\UMA\DIC\Container $c) {
+   $container->set( 'webfan.app.fsm.user',static function(\UMA\DIC\Container $c) {
       return new \Finite\StateMachine\StateMachine($c->get(__CLASS__));
    });
 	  
-   $container->set( 'webfan.app.shield.user', function(\UMA\DIC\Container $c) {
+   $container->set( 'webfan.app.shield.user',static function(\UMA\DIC\Container $c) {
 	  $class = get_class($c->get( 'webfan.app.shield'));
       return (new $class( $c->get( 'webfan.app.shield')->getContainer(), $c->get( 'webfan.app.shield')->getStub(), false))
 		    ->setConfig($c->get( 'webfan.app.shield')->getConfig(), false) 
@@ -8346,30 +8413,30 @@ class ShieldServiceProvider extends \frdl\ServiceProvider
 	  
 	  
 	  
-   $container->factory('.rand.str', function(\UMA\DIC\Container $c){
+   $container->factory('.rand.str',static function(\UMA\DIC\Container $c){
 	   $class = $c->get( 'webfan.app.shield.$::class');
 	   return call_user_func_array($class.'::mxGetARandomString', [32, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789']);
     });	  
 	  
-   $container->factory( 'emitter', function(\UMA\DIC\Container $c) {
+   $container->factory( 'emitter',static function(\UMA\DIC\Container $c) {
       return $c->get( \frdl\Flow\EventEmitter::class );
    });
 	  	  		
 	  
-   $container->set( \frdl\Flow\EventEmitter::class, function(\UMA\DIC\Container $c) {
+   $container->set( \frdl\Flow\EventEmitter::class,static function(\UMA\DIC\Container $c) {
       return new \frdl\Flow\EventEmitter();
    });
 		
-   $container->factory( 'finder', function(\UMA\DIC\Container $c) {
+   $container->factory( 'finder',static function(\UMA\DIC\Container $c) {
       return new \Symfony\Component\Finder\Finder();
    });
 		
-   $container->factory( 'json-rpc.encoder', function(\UMA\DIC\Container $c) {
+   $container->factory( 'json-rpc.encoder',static function(\UMA\DIC\Container $c) {
       return new \Datto\JsonRpc\Client();
    });
 		
 		
-   $container->set( 'floodprotection.login.admin', function(\UMA\DIC\Container $c) {
+   $container->set( 'floodprotection.login.admin',static function(\UMA\DIC\Container $c) {
       return new \frdl\security\floodprotection\FloodProtection('isAdmin::POST', 6, 90);		
    });		
 		
@@ -8468,11 +8535,11 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 			echo date('Y').date('W').'.'.max($this->AppShield->latest->time, 1).$this->AppShield->getVersion(false);
 ?>/node_modules/bootstrap-4/css/bootstrap-min.css" type="text/css" rel="stylesheet">	
 <script>
-document.addEventListener('DOMContentLoaded', function(){	
-  process.once('registerComponent::after', function(){	
-   require.main.app.boot('html');
-  });  
-});
+
+	
+	
+
+	
 </script>	
 <script type="text/javascript" src="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/cdn/application/<?php 
 			echo date('Y').date('W').'.'.max($this->AppShield->latest->time, 1).$this->AppShield->getVersion(false);
@@ -8487,7 +8554,9 @@ document.addEventListener('DOMContentLoaded', function(){
 <body oc-lazy-load="['frdlweb.install']">	
 	
 	<div style="position:fixed;font-style:italic;bottom:0px;">
-	  <a target="_installer" href="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'domainundhomepagespeicher.webfan.de'  ?>/install/">powered by Webfan/frdlweb</a>
+	  <small><a target="_installer" href="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'domainundhomepagespeicher.webfan.de'  ?>/install/">Frdlweb CMS v<?php
+			echo $this->AppShield->getVersion(false);
+		  ?></a></small>
 	</div>			
 	
 <div ng-controller="WizCtrl">	
@@ -8517,6 +8586,7 @@ document.addEventListener('DOMContentLoaded', function(){
 				<li ng-show="appStates['webfan.app.fsm']=='installed'" class="menu-item"><a ui-sref="project({})" ui-sref-active="active">Project</a></li>
 	
 				<li  class="menu-item"><a ui-sref="system({})" ui-sref-active="active">System</a></li>
+	            <li  class="menu-item"><a href="https://packages.frdl.de">Packages</a></li>
 				<!--  <li><a ui-sref="devTools({})" ui-sref-active="active">devTools</a></li>				   -->
 				  
 			  <li ng-show="project" class="menu-item"><a ui-sref-active="active" ui-sref="project.composer({dir:project.__DIR__})">Composer</a></li>
@@ -8564,7 +8634,7 @@ document.addEventListener('DOMContentLoaded', function(){
 	
 <div class="d-block f-bottom" ui-view="bottomView">			
 		
-	<error>The Installer is currently maintained.</error>	
+	<strong webfan-fadeout="3000">Welcome to the Frdlweb CMS Installer...!</strong>	
 	<noscript><error>You MUST enable javascript in your browser to use this site!</error></noscript>	
 		
 </div>	
@@ -8589,6 +8659,36 @@ document.addEventListener('DOMContentLoaded', function(){
 <div style="display:none;">
  <switch-button></switch-button>	
 </div>
+	<!--   href="http://webfan.de/cdn/frdl/flow/components/frdl/intent/test.service.html" -->
+	
+<intent
+    action="composer.package.apply"
+    type="text/package-name"
+    href="https://<?php echo $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']; ?>" 
+    title="Frdlweb CMS/Webfan Installshield @ <?php echo $_SERVER['SERVER_NAME']; ?>" 
+    disposition="new" 
+    icon="http://webfan.de/cdn/frdl/flow/components/frdl/webfan/icon.ico" ></intent>	
+	
+
+<script>
+		           window.addEventListener('message', function(event){	       	
+				//	alert(JSON.stringify(event.data));		    
+					// window.intent.postResult("Test result from service");		     
+				//	alert(JSON.stringify(Object.keys(event)));			     
+				//	alert(event);		
+					// window.opener.postMessage("Test result from service");		 
+					if(!window.intent)return;		
+					   window.__frdl_intent=window.intent;
+					 //  alert(JSON.stringify(window.intent));
+					//	alert(JSON.stringify(Object.keys(event)));			     
+					//alert(event);					   
+					   
+					//intent.postResult("Test result from service");		
+					//window.opener.focus();	
+					//window.close();	
+				});
+</script>
+	
 	
 	
 </body>
@@ -8710,6 +8810,7 @@ class RpcServiceProvider extends \frdl\ServiceProvider
 	        $server->set('frdl.compile', \Webfan\App\Rpc\Procedure\frdl_compile::class);
 	        $server->set('read', \Webfan\App\Rpc\Procedure\read::class);
 	        $server->set('composer.install', \Webfan\App\Rpc\Procedure\composer_install::class);
+	        $server->set('composer.update', \Webfan\App\Rpc\Procedure\composer_update::class);
 	        $server->set('composer.save', \Webfan\App\Rpc\Procedure\composer_save::class);
 			$server->set('composer.projects.get', \Webfan\App\Rpc\Procedure\composer_projects_get::class);
 	        $server->set('composer.clearcache', \Webfan\App\Rpc\Procedure\composer_clearcache::class);
@@ -8720,6 +8821,18 @@ class RpcServiceProvider extends \frdl\ServiceProvider
 	        $server->set('frdl.config.module.get', \Webfan\App\Rpc\Procedure\frdl_module_config_get::class);
 	        $server->set('frdl.config.module.set', \Webfan\App\Rpc\Procedure\frdl_config_module_set::class);
 	        $server->set('frdl.config.module.defaults', \Webfan\App\Rpc\Procedure\frdl_config_module_defaults::class);
+	  
+	        $server->set('update.feature.frdl', \Webfan\App\Rpc\Procedure\update_feature_frdl::class);
+	  
+	  
+	        $server->set('install.feature.node', \Webfan\App\Rpc\Procedure\install_feature_node::class);
+	  
+	        $server->set('npm.info', \Webfan\App\Rpc\Procedure\npm_info::class);
+	  
+	  
+	        $server->set('frdl.config.module.get.admin', \Webfan\App\Rpc\Procedure\frdl_module_config_get_admin::class);
+	        $server->set('frdl.config.module.set.admin', \Webfan\App\Rpc\Procedure\frdl_module_config_set_admin::class);
+	  
 	  
 	   return $server;
    });		
@@ -8798,6 +8911,11 @@ class RpcServiceProvider extends \frdl\ServiceProvider
 			return new \Webfan\App\Rpc\Procedure\composer_install($c->get('webfan.app.rpc.auth-shield'), $c);				
 		});		
 			
+		$container->set(\Webfan\App\Rpc\Procedure\composer_update::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\composer_update($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		
 		$container->set(\Webfan\App\Rpc\Procedure\frdl_compile::class, function(\UMA\DIC\Container $c) { 
 			return new \Webfan\App\Rpc\Procedure\frdl_compile($c->get('webfan.app.rpc.auth-shield'), $c);				
 		});		
@@ -8833,6 +8951,27 @@ class RpcServiceProvider extends \frdl\ServiceProvider
 		$container->set(\Webfan\App\Rpc\Procedure\frdl_config_module_defaults::class, function(\UMA\DIC\Container $c) { 
 			return new \Webfan\App\Rpc\Procedure\frdl_config_module_defaults($c->get('webfan.app.rpc.auth-shield'), $c);				
 		});	
+		
+		$container->set(\Webfan\App\Rpc\Procedure\update_feature_frdl::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\update_feature_frdl($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});			
+		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\install_feature_node::class, function(\UMA\DIC\Container $c) { 
+					return new \Webfan\App\Rpc\Procedure\install_feature_node($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});
+		
+		$container->set(\Webfan\App\Rpc\Procedure\npm_info::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\npm_info($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_module_config_get_admin::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_module_config_get_admin($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});
+		
+		$container->set(\Webfan\App\Rpc\Procedure\frdl_module_config_set_admin::class, function(\UMA\DIC\Container $c) { 
+			return new \Webfan\App\Rpc\Procedure\frdl_module_config_set_admin($c->get('webfan.app.rpc.auth-shield'), $c);				
+		});		
 	}
 	
 	
@@ -8963,6 +9102,41 @@ Content-Type: application/x-httpd-php
 namespace webfan\hps\patch;
 class Fs
 {
+	  
+ public static function filePrune($filename,$maxfilesize = 4096, $pruneStart = true){
+	 
+	 if(filesize($filename) < $maxfilesize){
+		return; 
+	 }
+	 
+	 $maxfilesize = min($maxfilesize, filesize($filename));
+     $maxfilesize = max($maxfilesize, 0);
+	 
+	 if(true!==$pruneStart){
+		 $fp = fopen($filename, "r+");
+         ftruncate($fp, $maxfilesize);
+         fclose($fp);
+		 return;
+	 }
+	 
+        $size=filesize($filename);
+        if ($size<$maxfilesize*1.0) return;
+        $maxfilesize=$maxfilesize*0.5; //we don't want to do it too often...
+        $fh=fopen($filename,"r+");
+        $start=ftell($fh);
+        fseek($fh,-$maxfilesize,SEEK_END);
+        $drop=fgets($fh);
+        $offset=ftell($fh);
+        for ($x=0;$x<$maxfilesize;$x++){
+            fseek($fh,$x+$offset);
+            $c=fgetc($fh);
+            fseek($fh,$x);
+            fwrite($fh,$c);
+        }
+        ftruncate($fh,$maxfilesize-strlen($drop));
+        fclose($fh);
+ }
+	
 	
 public static function getRootDir($path = null){
 	if(null===$path){
@@ -10770,12 +10944,17 @@ Content-Type: application/x-httpd-php
 <?php $state = [];
 
 $state['webfan.app.fsm.user'] = \Webfan\App\Shield::getInstance($this)->getContainer()->get('webfan.app.fsm.user')->getCurrentState()->getName(); 
+
+if('admin'===$state['webfan.app.fsm.user']){
 $state['webfan.app.fsm'] = \Webfan\App\Shield::getInstance($this)->getContainer()->get('webfan.app.fsm')->getCurrentState()->getName(); 
 
-$state['v'] = \Webfan\App\Shield::getInstance($this)->v; 
-$state['latest'] = \Webfan\App\Shield::getInstance($this)->latest; 
-$state['version'] = \Webfan\App\Shield::getInstance($this)->version; 
-$state['updateAvailable'] = \Webfan\App\Shield::getInstance($this)->updateAvailable; 
+
+ $state['v'] = \Webfan\App\Shield::getInstance($this)->v; 
+ $state['latest'] = \Webfan\App\Shield::getInstance($this)->latest; 
+ $state['version'] = \Webfan\App\Shield::getInstance($this)->version; 
+ $state['updateAvailable'] = \Webfan\App\Shield::getInstance($this)->updateAvailable; 
+}
+
 
 $state['baseUrlInstaller'] = 
 (isset(\Webfan\App\Shield::getInstance($this)->config->baseUrlInstaller)) 
@@ -10793,6 +10972,18 @@ $state['host'] = (isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : $_
 
 $state['protocol'] = !empty($_SERVER['HTTPS']) ? 'https:' : 'http:';
 
+if('admin'===$state['webfan.app.fsm.user']){
+ if(isset(\Webfan\App\Shield::getInstance($this)->config->FRDLJS_PATH)) {
+ $_p=\Webfan\App\Shield::getInstance($this)->config->FRDLJS_PATH;
+ $_f = dirname(dirname($_p)).\DIRECTORY_SEPARATOR.'package.json';
+   if(file_exists($_f)){
+     $pkg = json_decode(file_get_contents($_f));
+     $state['FrdlJsVersion'] = $pkg->version;
+   }else{
+     $state['FrdlJsVersion'] = '0.0.0';
+   }
+ }
+}
 
 header('Content-Type: application/json');
 echo json_encode($state); ?>
