@@ -18,7 +18,6 @@
 		"php": ">=7.2",
 		"oomphinc\/composer-installers-extender": "1.1.2",
 		"frdl\/web": "*",
-		"test-vendor\/test-package": "*",
 		"nette\/php-generator": "3.2.3"
 	},
 	"extra": {
