@@ -17,8 +17,7 @@
 	"require": {
 		"php": ">=7.2",
 		"oomphinc\/composer-installers-extender": "1.1.2",
-		"frdl\/web": "*",
-		"nette\/php-generator": "3.2.3"
+		"frdl\/web": "*"
 	},
 	"extra": {
 		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor"],
