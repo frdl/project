@@ -40,5 +40,10 @@
 		"psr-4": {
 			"compiled\\": "compiled\/"
 		}
-	}
+	},  
+       "suggest" : {
+	 "frdl/frdlweb-cms-db" : "Most of the frdl-module/frdl-theme packages require this Database Module",
+	 "frdl/nav" : "Add Navigation Menus to your Frdlweb Project",
+	 "frdl/auth-webfan" : "Login and User Registration Management"
+       }
 }
