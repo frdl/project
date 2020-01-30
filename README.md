@@ -20,7 +20,7 @@ https://webfan.de/install/php/ provides an UI you can download and use to create
 
 ## Modules
 To develop a Module for this framework, you have to publish a package of type "frdl-module".
-Following the directory-structure and naming conventions of the framework it will be compiled by frdl.
+Following the directory-structure and naming conventions of the framework it will be [compiled](https://webfan.de/install/?salt=&source=Webfan/App/AppBuilderServiceProvider) by frdl.
 Documentation follows/to do...
 
 ### Example Modules
