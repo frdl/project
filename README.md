@@ -22,7 +22,7 @@ https://frdl.de
 ![Compile your project](https://cdn.webfan.de/screenshots/frdlweb_compile.jpg)
 
 ## Modules
-To develop a Module for tis framework, you have to publish a package of type "frdl-module".
+To develop a Module for this framework, you have to publish a package of type "frdl-module".
 Following the directory-structure and naming conventions of the framework it will be compiled by frdl.
 Documentation follows/to do...
 
