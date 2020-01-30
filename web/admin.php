@@ -106,7 +106,7 @@ Author URI: http://frdl.webfan.de
 * 
 *  - edited by webfan.de
 */
-namespace App\compiled\Instance\MimeStub2\MimeStubEntity829828063;
+namespace App\compiled\Instance\MimeStub2\MimeStubEntity177729020;
 use frdl;
 
 
@@ -2151,13 +2151,13 @@ call_user_func(function($version){
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/apc_config.php";name="stub apc_config.php"
-Content-Md5: ce619544c7dabdedaa861ffc17728014
-Content-Sha1: ee1e8598dbe1b32cd8acaf56a05488a74d3fb1cd
+Content-Md5: 9ade02630dc57a497a77438308374996
+Content-Sha1: ad24fbab4ea72d72c367ee17b00db02b1cef43e2
 Content-Length: 203
 
 <?php
 			    return array (
-  'hashed_password' => '$2y$10$yQKAsQvzQI2j3o22ciOlRuZMXsnnJjd8f.fgdvdgbfd/iwP.TjTgy',
+  'hashed_password' => '$2y$10$Vc5bPzdZPyA6dUhLdadKGODL28AijKuNbSajv1LjyhJimp2JpeH1S',
   'workspace' => 'frdl.webfan.de',
   'installed_from_hps_blog_id' => 24,
 );
@@ -2573,7 +2573,7 @@ Content-Disposition: php ;filename="$DIR_LIB/frdl/A.php";name="class frdl\A"
  	
   const FN_ASPECTS = 'aspects';	
      /**
-    *  default $SEMRÂ´s
+    *  default $SEMRÃ‚Â´s
 	*  const  SERVER_ROUTER = {$cmd=SERVER} . {$format} . {$modul} . {$outputbuffers = explode(',')} 
 	*/
 	const TPL_SERVER_ROUTE = '{$cmd}.{$responseformat}.{$modul}.{$responsebuffers}';
@@ -4706,8 +4706,8 @@ Content-Type: application/x-httpd-php
 
 <?php 
 			    return array (
-  'time' => 1579458374,
-  'version' => '0.0.6.184727',
+  'time' => 1580340332,
+  'version' => '0.0.6.1066685',
 ); ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/Psr4Loader/RemoteFromWebfan.php" ; name="class Webfan\Psr4Loader\RemoteFromWebfan"
@@ -4921,7 +4921,7 @@ Content-Type: application/x-httpd-php
 /**
  * Dot - PHP dot notation access to arrays
  *
- * @author  Riku SÃÂ¤rkinen <riku@adbar.io>
+ * @author  Riku SÃƒÂƒÃ‚Â¤rkinen <riku@adbar.io>
  * @link    https://github.com/adbario/php-dot-notation
  * @license https://github.com/adbario/php-dot-notation/blob/2.x/LICENSE.md (MIT License)
  */
@@ -8654,8 +8654,16 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 	
 </div>	
 	
-	
-	
+<app-root></app-root>	
+<script>
+	process.nextTick(function(){	
+			  setTimeout(function(){	
+				process.nextTick(function(){	  
+		          require.main.app.boot('body');
+			    });  
+			  }, 2000);
+		 });		
+</script>	
 <div style="display:none;">
  <switch-button></switch-button>	
 </div>
@@ -9103,6 +9111,19 @@ namespace webfan\hps\patch;
 class Fs
 {
 	  
+	
+	
+ public static function compress($buffer) {
+        /* remove comments */
+        $buffer = preg_replace("/((?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:\/\/.*))/", "", $buffer);
+        /* remove tabs, spaces, newlines, etc. */
+        $buffer = str_replace(array("\r\n","\r","\t","\n",'  ','    ','     '), '', $buffer);
+        /* remove other spaces before/after ) */
+        $buffer = preg_replace(array('(( )+\))','(\)( )+)'), ')', $buffer);
+        return $buffer;
+  }
+	
+	
  public static function filePrune($filename,$maxfilesize = 4096, $pruneStart = true){
 	 
 	 if(filesize($filename) < $maxfilesize){
