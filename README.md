@@ -20,3 +20,12 @@ https://frdl.de
 ![Create Project](https://cdn.webfan.de/screenshots/frdlweb_new_project.jpg)
 ![Add dependencies](https://cdn.webfan.de/screenshots/frdlweb_composer_ui.jpg)
 ![Compile your project](https://cdn.webfan.de/screenshots/frdlweb_compile.jpg)
+
+## Modules
+To develop a Module for tis framework, you have to publish a package of type "frdl-module".
+Following the directory-structure and naming conventions of the framework it will be compiled by frdl.
+Documentation follows/to do...
+
+### Example Modules
+https://packages.frdl.de/
+https://github.com/frdl/whois
