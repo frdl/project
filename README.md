@@ -13,9 +13,6 @@ composer create-project frdl/project <dir>
 ## Installer UI Download
 https://webfan.de/install/php/ provides an UI you can download and use to create projects by web-interface.
 
-## Homepage
-https://frdl.de
-
 ## Usage
 ![Create Project](https://cdn.webfan.de/screenshots/frdlweb_new_project.jpg)
 ![Add dependencies](https://cdn.webfan.de/screenshots/frdlweb_composer_ui.jpg)
@@ -27,5 +24,8 @@ Following the directory-structure and naming conventions of the framework it wil
 Documentation follows/to do...
 
 ### Example Modules
-https://packages.frdl.de/
-https://github.com/frdl/whois
+ * https://packages.frdl.de/
+ * https://github.com/frdl/whois
+
+## Homepage
+https://frdl.de
