@@ -19,6 +19,11 @@
 		"oomphinc\/composer-installers-extender": "1.1.2",
 		"frdl\/web": "*"
 	},
+        "require-dev": {
+            "frdl/remote-psr4" : "*",
+	    "frdl/console" : "*",
+	    "frdl/cronjobs" : "*"		
+        },	
 	"extra": {
 		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor"],
 		"installer-paths": {
@@ -45,6 +50,7 @@
 	 "frdl/cms" : "A collection of packages recommended for a content management system based on Frdlweb",
 	 "frdl/frdlweb-cms-db" : "Most of the frdl-module/frdl-theme packages require this Database Module",
 	 "frdl/nav" : "Add Navigation Menus to your Frdlweb Project",
-	 "frdl/auth-webfan" : "Login and User Registration Management"
+	 "frdl/auth-webfan" : "Login and User Registration Management",
+	 "frdl/cronjobs" : "Service and Maintenance Tasks..."      
        }
 }
