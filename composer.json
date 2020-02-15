@@ -7,12 +7,6 @@
 	"repositories": [{
 		"type": "composer",
 		"url": "https:\/\/packages.frdl.de"
-	}, {
-		"type": "composer",
-		"url": "https:\/\/www.phpclasses.org\/"
-	}, {
-		"type": "composer",
-		"url": "https:\/\/www.jsclasses.org\/"
 	}],
 	"require": {
 		"php": ">=7.2",
@@ -22,7 +16,9 @@
         "require-dev": {
             "frdl/remote-psr4" : "*",
 	    "frdl/console" : "*",
-	    "frdl/cronjobs" : "*"		
+	    "frdl/cronjobs" : "*",
+	    "roave/security-advisories": "dev-master",
+	    "frdl/frdlweb-software-support" : "*"	
         },	
 	"extra": {
 		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor"],
@@ -51,6 +47,7 @@
 	 "frdl/frdlweb-cms-db" : "Most of the frdl-module/frdl-theme packages require this Database Module",
 	 "frdl/nav" : "Add Navigation Menus to your Frdlweb Project",
 	 "frdl/auth-webfan" : "Login and User Registration Management",
-	 "frdl/cronjobs" : "Service and Maintenance Tasks..."      
+	 "frdl/cronjobs" : "Service and Maintenance Tasks...",
+	 "frdl/frdlweb-software-support" : "Premium Integrations...."      
        }
 }
