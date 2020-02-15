@@ -1,5 +1,6 @@
 # project 
 [![Latest Stable Version](https://poser.pugx.org/frdl/project/version)](https://packagist.org/packages/frdl/project)[![Total Downloads](https://poser.pugx.org/frdl/project/downloads)](https://packagist.org/packages/frdl/project)[![License](https://poser.pugx.org/frdl/project/license)](https://packagist.org/packages/frdl/project)
+
 Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application.
 
 ## Installation
@@ -7,9 +8,9 @@ Kickstarter boilerplate to be used by `composer create-project` command. Demo/Te
 ````
 composer create-project frdl/project <dir>
 ````
-* Make directory `web` public, e.g. by creating a vhost with this dir as DOCUMENT_ROOT.
-* Login to `web/admin.php` with the default-password "admin" and CHANGE THE PASSWORD!
-* Visit `System`, configure the requirements and Install the Installer.
+* Make directory `./web` public, e.g. by creating a vhost with this dir as DOCUMENT_ROOT.
+* Login to `./web/admin.php` with the default-password "admin" and CHANGE THE PASSWORD!
+* Visit `System`, configure the requirements, install the Installer, create a project...
 
 ## Installer UI Download
 https://webfan.de/install/php/ provides an UI you can download and use to create projects by web-interface.
@@ -25,8 +26,11 @@ Following the directory-structure and naming conventions of the framework it wil
 Documentation follows/to do...
 
 ### Example Modules
- * https://packages.frdl.de/
- * https://github.com/frdl/whois
+ * [Official Frdlweb/Webfan Packages Repository...](https://packages.frdl.de/)
+ * [Domain Whois Module](https://github.com/frdl/whois)
+ * [Web Assets Extension Module](https://github.com/frdl/web-assets)
+ * [Contact Form Module](https://frdl.webfan.de/cdn/0.0.10.1/packages/frdl/contact-form/)
 
 ## Homepage
-https://frdl.de
+ * [Getting started](https://webfan.de/install/)
+ * [Forum](https://frdl.webfan.de/forum/)
