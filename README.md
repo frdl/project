@@ -1,4 +1,5 @@
-# project
+# project 
+[![Latest Stable Version](https://poser.pugx.org/frdl/project/version)](https://packagist.org/packages/frdl/project)[![Total Downloads](https://poser.pugx.org/frdl/project/downloads)](https://packagist.org/packages/frdl/project)[![License](https://poser.pugx.org/frdl/project/license)](https://packagist.org/packages/frdl/project)
 Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application.
 
 ## Installation
