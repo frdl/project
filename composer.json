@@ -41,11 +41,11 @@
 				"frdl/console"
 			],
 			"types" : [	
-				'frdl-module',		 
-				'frdl-theme',		 
-				'frdl-httpdocs',		 
-				'frdl-project',		  
-				'frdl-extension'				
+				"frdl-module",		 
+				"frdl-theme",		 
+				"frdl-httpdocs",		 
+				"frdl-project",		  
+				"frdl-extension"				
 			],
 			"exclude"  : [
 							
