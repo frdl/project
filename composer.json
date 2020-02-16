@@ -10,7 +10,7 @@
 	}],
 	"require": {
 		"php": ">=7.2",
-		"oomphinc\/composer-installers-extender": "1.1.2",
+		"frdl\/frdlweb-composer-installers": "*",
 		"frdl\/web": "*"
 	},
         "require-dev": {
@@ -18,18 +18,42 @@
 	    "frdl/console" : "*",
 	    "frdl/cronjobs" : "*",
 	    "roave/security-advisories": "dev-master",
-	    "frdl/frdlweb-software-support" : "*"	
+	    "frdl/frdlweb-software-support" : "*",
+	    "symfony/finder" : "^5.1",
+	    "symfony/filesystem" : "^5.1",		
         },	
-	"extra": {
+    "extra": {
+		"class": "Webfan\\Support\\ComposerInstallersExtender\\Plugin",
 		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor"],
 		"installer-paths": {
 			"modules\/{$vendor}.{$name}\/": ["type:frdl-module"],
 			"themes\/{$vendor}\/{$name}\/": ["type:frdl-theme"],
 			"web\/{$vendor}\/{$name}\/": ["type:frdl-httpdocs"],
 			"vendor\/frdlweb\/{$vendor}\/{$name}\/": ["vendor:frdl", "vendor:frdlweb", "vendor:webfan", "vendor:webfan3"]
-		}
-	},
+		},
+       "dependency-scripts": {      
+		    "run": true,     
+		    "trust": [ 
+				"symfony",
+				"symfony/symfony",
+				"symfony/console",
+				"frdl",
+				"frdl/console"
+			],
+			"types" : [	
+				'frdl-module',		 
+				'frdl-theme',		 
+				'frdl-httpdocs',		 
+				'frdl-project',		  
+				'frdl-extension'				
+			],
+			"exclude"  : [
+							
+			]
+	   }			
+     },	
 	"config": {
+		"sort-packages": true,
 		"preferred-install": "auto",
 		"cache-files-ttl": 3600,
 		"prepend-autoloader": true,
@@ -49,5 +73,40 @@
 	 "frdl/auth-webfan" : "Login and User Registration Management",
 	 "frdl/cronjobs" : "Service and Maintenance Tasks...",
 	 "frdl/frdlweb-software-support" : "Premium Integrations...."      
-       }
+       },
+	    
+       "scripts": {
+        "fix": "vendor/bin/phpcbf",
+        "lint": "vendor/bin/phpcs",
+        "test": [
+		    "vendor/bin/phpunit",
+		    "@frdlweb frdl:test" 			
+		],
+		"frdlweb":  "vendor/bin/frdlweb",
+		"frdl" : "@php vendor/bin/frdl",
+			
+        "pre-package-install": "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent",
+        "post-package-install": "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent",
+        "pre-package-update": "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent",
+        "post-package-update": "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent",
+        "pre-package-uninstall": "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent",
+        "post-package-uninstall": "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent",
+			
+        "post-update-cmd": [
+			"Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
+		],
+        "post-install-cmd": [
+            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
+        ],
+        "post-autoload-dump": [
+            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
+        ],			
+		"post-root-package-install": [
+            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
+        ],
+        "post-create-project-cmd": [
+	    "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent",
+            "@test"
+        ]
+    }
 }
