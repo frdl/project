@@ -107,6 +107,98 @@
         "post-create-project-cmd": [
 	    "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent",
             "@test"
-        ]
+        ],
+	       
+	"frdlweb:stage.write.configs": [				
+		
+	],
+	    
+	"frdlweb:stage.bundlejs:prepare": [				
+		
+	],	    
+	"frdlweb:stage.bundlejs:action": [				
+		
+	],	    
+	"frdlweb:stage.backup:dist": [				
+		
+	],	    
+	"frdlweb:stage.deploy:frdlweb": [				
+		
+	],	    
+	"frdlweb:stage.clear:appJs": [				
+		
+	],	    
+	"frdlweb:stage.autoload": [				
+		
+	],	    
+	"frdlweb:stage.generate.index.web": [				
+		
+	],	    
+	"frdlweb:stage.generate.index": [				
+		
+	],	    
+	"frdlweb:stage.generate.container.build": [				
+		
+	],	    
+	"frdlweb:stage.generate.container.finalize": [				
+		
+	],	    
+	"frdlweb:stage.generate.misc-autoloader": [				
+		
+	],	    
+	"frdlweb:stage.generate.class.Webfan\\App\\Shield": [				
+		
+	],	    
+	"frdlweb:stage.generate.class.compiled\\project": [				
+		
+	],
+	"frdlweb:stage.write.project.json": [				
+		
+	],	    
+	"frdlweb:stage.prune.cache.templates": [				
+		
+	],
+	"frdlweb:stage.compile.events": [				
+		
+	],	    
+	"frdlweb:stage.compile.frdl-module-scripts": [				
+		
+	],
+	"frdlweb:stage.compile.frdl-modules": [				
+		
+	],	    
+	"frdlweb:stage.compile.db.modules": [				
+		
+	],
+	"frdlweb:stage.compile.db": [				
+		
+	],	    
+	"frdlweb:stage.compile.after": [				
+		
+	],
+	"frdlweb:pipeline.compile": [				
+		
+	],	    
+	"frdlweb:pipeline.bundlejs": [				
+		
+	],
+	"frdlweb:support.checks": [				
+		
+	],	    
+	"frdlweb:check.issues": [				
+		
+	],    
+	"frdlweb:check.updates": [				
+		
+	],    
+	"frdlweb:check.suggested": [				
+		
+	],    
+	"frdlweb:check.security": [				
+		
+	],       
+	"frdlweb:compile": [				
+		
+	]	       
     }
 }
