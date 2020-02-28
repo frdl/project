@@ -24,9 +24,9 @@
         },	
     "extra": {
 		"class": "Webfan\\Support\\ComposerInstallersExtender\\Plugin",
-		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor"],
+		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor", "frdl-extension"],
 		"installer-paths": {
-			"modules\/{$vendor}.{$name}\/": ["type:frdl-module"],
+			"modules\/{$vendor}.{$name}\/": ["type:frdl-module", "type:frdl-extension"],
 			"themes\/{$vendor}\/{$name}\/": ["type:frdl-theme"],
 			"web\/{$vendor}\/{$name}\/": ["type:frdl-httpdocs"],
 			"vendor\/frdlweb\/{$vendor}\/{$name}\/": ["vendor:frdl", "vendor:frdlweb", "vendor:webfan", "vendor:webfan3"]
