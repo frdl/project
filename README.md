@@ -6,20 +6,34 @@ Kickstarter boilerplate to be used by `composer create-project` command. Demo/Te
 
 ## Installation
 ### Installation (via UI) - Recommended way
-https://webfan.de/install/php/ provides an UI you can download and use to create projects by web-interface.
+https://webfan.de/install/php/ provides an UI you can download and use to create projects by an [web-interface-UI](#webadmin).
 
 
-### Installation (via Composer) - Optional way
-* Create boilerplate (optional)
+### Configuration and Usage
+* Create boilerplate (optional) `not yet supported`
 ````
 composer create-project frdl/project <dir>
 ````
+<a name="webadmin"></a>
 * Make directory `./web` public, e.g. by creating a vhost with this dir as DOCUMENT_ROOT.
 * Login to `./web/admin.php` with the default-password "admin" and CHANGE THE PASSWORD!
-* Visit `System`, configure the requirements, install the Installer, create a project...
+* Setup:
+  * Visit the `System` Menu to setup and configure the requirements:
+        * Setup `Composer` in the `System`-Page       
+        * Setup `Workspace Directory` in the `System`-Page       
+        * Setup `Node.js`and `npm` in the `System`-Page       
+        * Setup `git` in the `System`-Page       
+        * Setup `frdl.js` in the `System`-Page       
+        * Finalize the installation, klick `Install Webfan PHP-Installer` in the `System`-Page
+   * Manage your Projects:   
+         * Create your first project in the `Project`-Page via the `Create Project`-Button
+         * Add the dependencies and `frdl-module` packages by visiting the `Project`->`Composer` Menu
+         * Install the dependencies
+         * Setup and configure your `frdl-module`s via visiting the `Project`->`Configuration`-Menu
+         * Click `Compile Project` in the `Endpoint`-Page to compile the application using `frdl` and `frdl.js`    
+    
 
-
-## Usage
+## Screenshots
 ![Create Project](https://cdn.webfan.de/screenshots/frdlweb_new_project.jpg)
 ![Add dependencies](https://cdn.webfan.de/screenshots/frdlweb_composer_ui.jpg)
 ![Compile your project](https://cdn.webfan.de/screenshots/frdlweb_compile.jpg)
