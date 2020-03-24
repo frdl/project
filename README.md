@@ -32,6 +32,9 @@ composer create-project frdl/project <dir>
          * Setup and configure your `frdl-module`s via visiting the `Project`->`Configuration`-Menu
          * Click `Compile Project` in the `Endpoint`-Page to compile the application using `frdl` and `frdl.js`    
     
+ * `Tip: rename the admin.php file to a new name harder to guess!`
+ * `Tip: enable the autoupdate and adminalert features and options if present!`
+ 
 
 ## Screenshots
 ![Create Project](https://cdn.webfan.de/screenshots/frdlweb_new_project.jpg)
