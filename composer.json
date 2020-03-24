@@ -20,7 +20,7 @@
 	    "roave/security-advisories": "dev-master",
 	    "frdl/frdlweb-software-support" : "*",
 	    "symfony/finder" : "^5.1",
-	    "symfony/filesystem" : "^5.1",		
+	    "symfony/filesystem" : "^5.1"		
         },	
     "extra": {
 		"class": "Webfan\\Support\\ComposerInstallersExtender\\Plugin",
