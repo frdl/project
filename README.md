@@ -6,7 +6,7 @@ Kickstarter boilerplate to be used by `composer create-project` command. Demo/Te
 
 ## Installation
 ### Installation (via UI) - Recommended way
-https://webfan.de/install/php/ provides an UI you can download and use to create projects by an [web-interface-UI](#webadmin).
+https://frdl.webfan.de/install/php/ provides an UI you can download and use to create projects by an [web-interface-UI](#webadmin).
 
 
 ### Configuration and Usage
@@ -43,7 +43,7 @@ composer create-project frdl/project <dir>
 
 ## Modules/Extensions
 To develop a Module for this framework, you have to publish a package of type "frdl-module" or "frdl-extension".
-Following the directory-structure and naming conventions of the framework it will be [compiled](https://webfan.de/install/?salt=&source=Webfan/App/AppBuilderServiceProvider) by frdl.
+Following the directory-structure and naming conventions of the framework it will be [compiled](https://frdl.webfan.de/install/?salt=&source=Webfan/App/AppBuilderServiceProvider) by frdl.
 Documentation follows/to do...
 
 ### Example Modules
@@ -53,5 +53,5 @@ Documentation follows/to do...
  * [Contact Form Module](https://frdl.webfan.de/cdn/0.0.10.1/packages/frdl/contact-form/)
 
 ## Homepage
- * [Getting started](https://webfan.de/install/)
+ * [Getting started](https://frdl.webfan.de/install/)
  * [Forum](https://frdl.webfan.de/forum/)
