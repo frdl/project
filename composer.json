@@ -10,8 +10,7 @@
 	}],
 	"require": {
 		"php": ">=7.2",
-		"frdl\/frdlweb-composer-installers": "*",
-		"frdl\/web": "*"
+		"frdl\/frdlweb-composer-installers": "*"
 	},
         "require-dev": {
             "frdl/remote-psr4" : "*",
@@ -24,11 +23,12 @@
         },	
     "extra": {
 		"class": "Webfan\\Support\\ComposerInstallersExtender\\Plugin",
-		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "vendor", "frdl-extension"],
+		"installer-types": ["frdl-theme", "frdl-module", "frdl-httpdocs", "frdl-public", "vendor", "frdl-extension"],
 		"installer-paths": {
 			"modules\/{$vendor}.{$name}\/": ["type:frdl-module", "type:frdl-extension"],
 			"themes\/{$vendor}\/{$name}\/": ["type:frdl-theme"],
 			"web\/{$vendor}\/{$name}\/": ["type:frdl-httpdocs"],
+			"{$webroot}\/": ["type:frdl-public"],
 			"vendor\/frdlweb\/{$vendor}\/{$name}\/": ["vendor:frdl", "vendor:frdlweb", "vendor:webfan", "vendor:webfan3"]
 		},
        "dependency-scripts": {      
@@ -43,7 +43,8 @@
 			"types" : [	
 				"frdl-module",		 
 				"frdl-theme",		 
-				"frdl-httpdocs",		 
+				"frdl-httpdocs",	 
+				"frdl-public",		 
 				"frdl-project",		  
 				"frdl-extension"				
 			],
@@ -68,12 +69,15 @@
 		}
 	},  
        "suggest" : {
-	 "frdl/cms" : "A collection of packages recommended for a content management system based on Frdlweb",
+	 "frdl/web": "Useful and helpers...",  
+	 "frdl/endpoint": "Frdlweb project deployment frontend server",	
+	 "frdl/workspace": "Frdlweb project development",	
+         "frdl/cms" : "A collection of packages recommended for a content management system based on Frdlweb",
 	 "frdl/frdlweb-cms-db" : "Most of the frdl-module/frdl-theme packages require this Database Module",
 	 "frdl/nav" : "Add Navigation Menus to your Frdlweb Project",
 	 "frdl/auth-webfan" : "Login and User Registration Management",
 	 "frdl/cronjobs" : "Service and Maintenance Tasks...",
-	 "frdl/frdlweb-software-support" : "Premium Integrations...."      
+	 "frdl/frdlweb-software-support" : "Development, Installation, Building, Deploying, Meta..."      
        },
 	    
        "scripts": {
@@ -102,12 +106,11 @@
         "post-autoload-dump": [
             "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
         ],			
-		"post-root-package-install": [
+	"post-root-package-install": [
             "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
         ],
         "post-create-project-cmd": [
-	    "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent",
-            "@test"
+	    "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
         ],
 	       
 	"frdlweb:stage.write.configs": [				
