@@ -1,23 +1,10 @@
 <?php
 /**
- * @package frdl/webfan
- * @version 1.2.x
- */
-/*
-Plugin Name: Application Composer InstallShield
-Plugin URI: http://www.webfan.de/install/
-Description: This plugin can manage software projects, packages, components and applivations.
-Author: Till Wehowski
-Version: 1.2.x
-Author URI: http://frdl.webfan.de
-*/
-/**
 * 
 * This script can be used to generate "self-executing" .php Files.
 * example (require this file or autoload webfan\MimeStubAPC:
 * 
-* Dowload an example implementation at http://www.webfan.de/install/
-* 
+* Dowload an example implementation at https://webfan.de/install/php/  
 * 
 *   $vm = \webfan\MimeStubAPC::vm();
 * 
@@ -163,7 +150,7 @@ interface StubRunnerInterface
 	
 }//namespace frdlweb
 
-namespace App\compiled\Instance\MimeStub2\MimeStubEntity613357902{
+namespace App\compiled\Instance\MimeStub2\MimeStubEntity408263755{
 use frdl;
 use frdlweb\StubItemInterface as StubItemInterface;	 
 use frdlweb\StubHelperInterface as StubHelperInterface;
@@ -179,25 +166,6 @@ if(!defined('___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___')){
 
 
 
-class Context
-{
-	
-}
-
-
-class Env
-{
-	
-}
-
-
-class Response
-{
-	
-}
-
-
-
 
 
  class MimeVM implements StubHelperInterface
@@ -206,8 +174,8 @@ class Response
  	
  	public $e_level = E_USER_ERROR;
  	
- 	protected $Request = false;
-  	protected $Response = false;	
+ //	protected $Request = false;
+  //	protected $Response = false;	
  	
  	protected $raw = false;
  	protected $MIME = false;
@@ -223,14 +191,15 @@ class Response
  	protected $offset = false;
  	
  	
- 	protected $Context = false; 	
- 	protected $Env = false;
+ //	protected $Context = false; 	
+ //	protected $Env = false;
  	
  	protected $initial_offset = 0;
  	
  	protected $php = array();
  	
  
+ 	protected $_lint = true;
  
     protected $mimes_engine = array(
          'application/vnd.frdl.script.php' => '_run_php_1',
@@ -252,20 +221,45 @@ class Response
     	    }
 
 	}
-
-  	public function runStubs(){
-
-	  foreach( $this->document->getParts() as $rootPos => $rootPart){
+	 
+	 
+   public function getPhpFileTypes(){
+	   $a = [];
+	   foreach($this->mimes_engine as $type => $handler){
+		   if('_run_php_1'===$handler){
+			   $a[]=$type;
+		   }
+	   }
+	   return $a;
+   }	 
+	 
+	 
+   public function getBootStubs(){
+	   return $this->get_file($this->document, '$__FILE__/stub.zip', 'archive stub.zip');	
+   }
+	 
+	 
+  	public function runStubs($stubs = null){
+      $BootStubs = (!is_null($stubs)) ? $stubs : $this->getBootStubs();	
+		
+		
+	  foreach( $BootStubs->getParts() as $rootPos => $rootPart){
+		
+		  	  
           if($rootPart->isMultiPart())	{
-		 	foreach( $rootPart->getParts() as $pos => $part){
+		 	foreach( $rootPart->getParts() as $pos => $part){		
+				
 		 		if(isset($this->mimes_engine[$part->getMimeType()])){
 					call_user_func_array(array($this, $this->mimes_engine[$part->getMimeType()]), array($part));
-				}
-				
+				}				
     	    }
+		  }else{
+			 	if(isset($this->mimes_engine[$rootPart->getMimeType()])){
+					call_user_func_array(array($this, $this->mimes_engine[$rootPart->getMimeType()]), array($rootPart));
+				}			  
 		  }
-		  break;
-       }
+		//  break;
+       }// each
 		
 		
 	 }
@@ -300,18 +294,29 @@ class Response
 	 
      public function get_file($part, $file, $name){
     	
+		 if(null === $part || !is_object($part) ){
+			return false; 
+		 }
+		 
 			
       if($file === $part->getFileName() || $name === $part->getName()){
 	  	   	  return $part;
 	  }	
     	
 	 	
-	 $r = function($part, $file, $name, $r) {	     
+	 $r = function($part, $file, $name, $r) {	   
+		 if(null === $part || !is_object($part) ){
+			return false; 
+		 }		 
+		 
 	   if($file === $part->getFileName() || $name === $part->getName()){
 	  	   	  return $part;
 	   }		 
        if($part->isMultiPart())	{
         foreach( $part->getParts() as $pos => $_part){
+					 if(null === $_part || !is_object($_part) ){			
+						 continue; 		
+					 }			
 			if(!$_part->isMultiPart() && $file === $_part->getFileName() || $name === $_part->getName()){
 		   	  return $_part;
 	        }elseif($_part->isMultiPart()){
@@ -344,25 +349,118 @@ class Response
           foreach($fnames as $fn){
 		  	$_p = $this->get_file($this->document, $fn, $name);
 		  	if(false !== $_p){
-				$this->_run_php_1($_p);
-				return $_p;
+				$this->_run_php_1($_p, $class);
+				//return $_p;
+				return true;
 			}
 		  } 
            
         return false;   
 	}
 	 
+    public function lint(?bool $lint = null) : bool {
+		 if(is_bool($lint)){
+			$this->_lint=$lint; 
+		 }
+		return $this->_lint;
+    }
 	 
-	public function _run_php_1($part){
-				
+	public function _run_php_1($part, $class = null, ?bool $lint = null){
+	
+	
+	//	set_time_limit(min(900, ini_get('max_execution_time') + 300));
+			if(!isset($_ENV['FRDL_HPS_CACHE_DIR'])){
+			  $_ENV['FRDL_HPS_CACHE_DIR'] = getenv('FRDL_HPS_CACHE_DIR');	
+			}
+		
+		
+		$cacheDir = (!empty($_ENV['FRDL_HPS_CACHE_DIR'])) ? rtrim($_ENV['FRDL_HPS_CACHE_DIR'], \DIRECTORY_SEPARATOR.'/\\').\DIRECTORY_SEPARATOR.'temp-includes' 
+						: rtrim( \sys_get_temp_dir(), \DIRECTORY_SEPARATOR.'/\\').\DIRECTORY_SEPARATOR.'temp-includes';
+		
+		$cacheDirLint = (!empty($_ENV['FRDL_HPS_CACHE_DIR'])) ? rtrim($_ENV['FRDL_HPS_CACHE_DIR'], \DIRECTORY_SEPARATOR.'/\\').\DIRECTORY_SEPARATOR.'temp-lint' 
+						: rtrim( \sys_get_temp_dir(), \DIRECTORY_SEPARATOR.'/\\').\DIRECTORY_SEPARATOR.'temp-lint';
+		
+		
+		 if(!is_bool($lint)){
+			$lint=$this->lint(); 
+		 }	
+		
 		$code = $part->getBody();
-		$code = trim($code);
-		$code = trim($code, '<?>php ');
-	//	try{
-			return eval($code);
-	//	}catch(\Exception $e){
-	//		throw new \Exception('Issue in {$MimeStubAPC}/'.$part->getFileName().' '.$part->getName().' : '.$e->getMessage().'<br /><br />Code:<br />'.htmlentities($code), $e->getSeverity());
-	//	}		
+		
+		
+  $code = trim($code);
+  if('<?php' === substr($code, 0, strlen('<?php')) ){
+	  $code = substr($code, strlen('<?php'), strlen($code));
+  }
+  $code = rtrim($code, '<?php> ');
+  $codeWithStartTags = "<?php "."\n".$code."\n".'?>';	
+		
+	//	$codeWithStartTags ='<?php'."\n".$code;
+		
+				  
+		$name = $class;
+		    if(!is_string($name)){
+				$name = $part->getName();
+			}
+		
+		    if(!is_string($name)){
+				$name = $part->getFileName();
+			}
+		
+		
+		$fehler =      true === $lint  
+			       &&  class_exists(\frdl\Lint\Php::class, $class !== \frdl\Lint\Php::class)
+			       &&  class_exists(\webfan\hps\patch\PhpBinFinder::class, $class !== \webfan\hps\patch\PhpBinFinder::class) 
+			       &&  class_exists(\Symfony\Component\Process\ExecutableFinder::class, $class !== \Symfony\Component\Process\ExecutableFinder::class) 
+			       &&  class_exists(\Symfony\Component\Process\PhpExecutableFinder::class, $class !== \Symfony\Component\Process\PhpExecutableFinder::class) 
+			    ? (new \frdl\Lint\Php($cacheDirLint) ) ->lintString($codeWithStartTags)
+			    : true;
+		
+		if(true !==$fehler ){
+			$e='Error in '.__METHOD__.' ['.__LINE__.']'.print_r($fehler,true).'<br />$class: '.$name.'<pre>'.htmlentities($codeWithStartTags).'</pre>'.$part->getFileName().' '.$part->getName();
+		    trigger_error($e);			
+		}else{
+			 return eval($code);	
+		}
+		
+		
+	 //	try{
+		 //   return eval($code);			
+	   //  }catch(\Exception $e){						
+		 //	$er='Error in '.$name.'<pre>'.htmlentities($codeWithStartTags).'</pre>'.' '.__METHOD__.' ['.__LINE__.'|'.$e->getLine().']'.$e->getMessage();		
+		 //  trigger_error($er);		
+	 //	}	
+		
+		
+	/*	
+			$cacheFile = 
+				tempnam($cacheDir, 
+						'eval.runtime.'.preg_replace("/[^\w\d]/", "_", $name).'.');
+	     	
+		     if(!file_exists(dirname($cacheFile))){
+				 mkdir(dirname($cacheFile), 0755, true);
+			 }
+		
+		
+		    $handle = fopen($cacheFile, "w+");
+            fwrite($handle, $codeWithStartTags);
+            fclose($handle);
+		
+		try{
+			if(file_exists($cacheFile)){
+				$result = require $cacheFile;
+				unlink($cacheFile);
+				return $result;
+			}else{
+			    return eval($code);
+			}
+	    }catch(\Exception $e){						
+			$er='Error in '.$name.'<pre>'.htmlentities($codeWithStartTags).'</pre>'.' '.__METHOD__.' ['.__LINE__.'|'.$e->getLine().']'.$e->getMessage();
+			// print_r($e);
+		   // trigger_error($e);
+			throw new \Exception($er);
+		}		
+		*/
 	}
 	 
 	 	
@@ -515,10 +613,10 @@ class Response
 	 	break;
 	 	
 	 	
-	 	case 'request':	 
-	 		return $this->Request;
-	 	break;
-	 		
+	 //	case 'request':	 
+	// 		return $this->Request;
+	// 	break;
+	 /*		
 	 	case 'context':	 
 	 		return $this->Context;
 	 	break;
@@ -526,7 +624,7 @@ class Response
 	 	case 'response':	 
 	 		return $this->Response;
 	 	break;
-	 	
+	 */	
 	 	default:
          return null;	 	
 	 	break;
@@ -557,10 +655,10 @@ class Response
 	 		}
  		
 		   	
- 		$this->Request = new Request();
- 		$this->Env = new Env();
-		$this->Context = new Context();
-		$this->Response = new Response();
+ 		//$this->Request = new Request();
+ 		//$this->Env = new Env();
+	//	$this->Context = new Context();
+	//	$this->Response = new Response();
 		$res = &$this;
 		
         if(0<count($args)){
@@ -568,9 +666,11 @@ class Response
 		foreach($args as $arg){
 		  $i++;
 		  	
-				if(is_object($arg) && get_class($this->Request)===get_class($arg)){
-					$this->Request = &$arg;
-				}elseif(is_object($arg) && get_class($this->Env)===get_class($arg)){
+		  	/*
+				//if(is_object($arg) && get_class($this->Request)===get_class($arg)){
+			//		$this->Request = &$arg;
+			//	}else
+				if(is_object($arg) && get_class($this->Env)===get_class($arg)){
 					$this->Env = &$arg;
 				}elseif(is_object($arg) && get_class($this->Context)===get_class($arg)){
 					$this->Context = &$arg;
@@ -580,7 +680,9 @@ class Response
 				
 	    if(is_array($arg)){
              $this->Context = new Context($arg);
-		}if(is_string($arg)){
+		}
+		*/
+		if(is_string($arg)){
     		$cmd = $arg;
     		if('run'===$arg){
 				$res = call_user_func_array(array($this, '_run'), $args);
@@ -668,70 +770,6 @@ class Response
  }
 
 
-
-
- class Request
- {
-        function __construct(){
-        $this->SAPI = PHP_SAPI;
-        $this->argv = ('cli' ===$this->SAPI && isset($_SERVER['argv']) /* && isset($_SERVER['argv'][0])*/) 	? $_SERVER['argv'][0] : false;
-       	$this->protocoll = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? 'https' : 'http';
-		$this->method = $_SERVER['REQUEST_METHOD'];
-		$this->server_name = $_SERVER['SERVER_NAME'];
-		$this->origin =(isset($_SERVER['HTTP_ORIGIN'])) ? $_SERVER['HTTP_ORIGIN'] : null;
-		$this->get = $_GET;
-		$this->post = $_POST;
-		$this->cookies = $_COOKIE;
-		$this->session = (true === $this->session_started() ) ? $_SESSION : null;
-		$this->uri = $_SERVER['REQUEST_URI'];
-		$this->parsed = parse_url($this->protocoll.'://'.$this->server_name.$this->uri);
-		switch($this->method){
-		       case 'HEAD' :
-		       case 'GET' :
-		           $this->request = $_GET;
-		          break;
-		        case 'POST' : 
-		        case 'PUT' : 
-		        case 'DELETE' : 
-		           $this->request = $_POST;
-		          break;
-		        default : 
-		            $this->request = $_REQUEST;	
-		          break;	
-		}
-		
-		$this->headers = $this->getAllHeaders();
-      }
-    
-
-
-  public function getAllHeaders(){
-       $headers = [];
-       foreach ($_SERVER as $name => $value)
-       {
-           if (substr($name, 0, 5) == 'HTTP_')
-           {
-               $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5, strlen($name))))))] = $value;
-           }
-       }
-       return $headers;
-    }  
-    
-    
-    
-   public function session_started(){
-     if ( php_sapi_name() !== 'cli' ) {
-        if ( version_compare(phpversion(), '5.4.0', '>=') ) {
-            return session_status() === PHP_SESSION_ACTIVE ? true : false;
-        } else {
-            return session_id() === '' ? false : true;
-        }
-     }
-     return false;
-   }
-      
- }
-
 /**
 *  https://github.com/Riverline/multipart-parser 
 * 
@@ -762,7 +800,7 @@ class Response
 */
 
 
- 
+  
 class MimeStub2 implements StubItemInterface
 {
  const NS = __NAMESPACE__;
@@ -1250,7 +1288,7 @@ public function generateBundary($opts = array()) {
             $separator = '--'.preg_quote($boundary, '/');
 
             if (0 === preg_match('/'.$separator.'\r?\n(.+?)\r?\n'.$separator.'--/s', $body, $matches)
-              || preg_last_error() !== PREG_NO_ERROR
+              || \preg_last_error() !== \PREG_NO_ERROR
             ) {
               $bodyParts = self::strip_body($body,$separator."",$separator."--",0);
                if(1 !== count($bodyParts['pindex'])){
@@ -1297,7 +1335,7 @@ public function generateBundary($opts = array()) {
             
                 // Only convert if not UTF-8
                 if ('utf-8' !== strtolower($charset)) {
-                    $body = mb_convert_encoding($body, 'utf-8', $charset);
+                    $body = \mb_convert_encoding($body, 'utf-8', $charset);
                 }
             }
 
@@ -1724,7 +1762,7 @@ if('application/x-httpd-php' === $type || 'application/vnd.frdl.script.php' === 
   if('<?php' === substr($code, 0, strlen('<?php')) ){
 	  $code = substr($code, strlen('<?php'), strlen($code));
   }
-  $code = rtrim($code, '<?php ');
+  $code = rtrim($code, '<?php> ');
   $code = '<?php '.$code.' ?>';	
 }
 					 
@@ -1740,7 +1778,176 @@ $codeWrap.= "\r\n"."\r\n". trim($code);
 	
 }
 
+	
+	
+	
+ini_set('display_errors','on');
+error_reporting(\E_ERROR | \E_WARNING | \E_PARSE);	
+	
+\class_alias('\\'.__NAMESPACE__.'\\MimeStub2', '\\'.__NAMESPACE__.'\\MimeStub2v4');
 
+	
+
+if ( !function_exists('sys_get_temp_dir')) {
+  function sys_get_temp_dir() {
+    if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
+    if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
+    if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
+    $tempfile=tempnam(__FILE__,'');
+    if (file_exists($tempfile)) {
+      unlink($tempfile);
+      return realpath(dirname($tempfile));
+    }
+    return null;
+  }
+} 	
+	
+
+
+
+call_user_func(function() {
+	
+$drush_server_home = (function() {
+	
+$getRootDir;	
+ $getRootDir = (function($path = null) use(&$getRootDir){
+	if(null===$path){
+		$path = $_SERVER['DOCUMENT_ROOT'];
+	}
+
+		
+ if(''!==dirname($path) && '/'!==dirname($path) //&& @chmod(dirname($path), 0755) 
+    &&  true===@is_writable(dirname($path))
+    ){
+ 	return $getRootDir(dirname($path));
+ }else{
+ 	return $path;
+ }
+
+ });		
+	
+  // Cannot use $_SERVER superglobal since that's empty during UnitUnishTestCase
+  // getenv('HOME') isn't set on Windows and generates a Notice.
+  $home = getenv('HOME');
+  if (!empty($home)) {
+    // home should never end with a trailing slash.
+    $home = rtrim($home, '/');
+  }elseif (isset($_SERVER['HOME']) && !empty($_SERVER['HOME'])) {
+    // home on windows
+    $home = $_SERVER['HOME'];
+    // If HOMEPATH is a root directory the path can end with a slash. Make sure
+    // that doesn't happen.
+    $home = rtrim($home, '\\/');
+  }elseif (!empty($_SERVER['HOMEDRIVE']) && !empty($_SERVER['HOMEPATH'])) {
+    // home on windows
+    $home = $_SERVER['HOMEDRIVE'] . $_SERVER['HOMEPATH'];
+    // If HOMEPATH is a root directory the path can end with a slash. Make sure
+    // that doesn't happen.
+    $home = rtrim($home, '\\/');
+  }elseif (isset($_ENV['HOME']) && !empty($_ENV['HOME'])) {
+    // home on windows
+    $home = $_ENV['HOME'];
+    // If HOMEPATH is a root directory the path can end with a slash. Make sure
+    // that doesn't happen.
+    $home = rtrim($home, '\\/');
+  }
+	
+  return empty($home) ? $getRootDir($_SERVER['DOCUMENT_ROOT']) : $home;
+});
+	
+
+	
+$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - filemtime(__FILE__);
+putenv('FRDL_HPS_PSR4_CACHE_LIMIT='.$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']);
+
+//$_ENV['HOME'] = $drush_server_home();
+//putenv('HOME='.$_ENV['HOME']);
+$_ENV['FRDL_HOME'] = $drush_server_home();
+putenv('FRDL_HOME='.$_ENV['FRDL_HOME']);
+//putenv('HOME='.$_ENV['FRDL_HOME']);	
+
+$_homeg = str_replace(\DIRECTORY_SEPARATOR, '/', getenv('FRDL_HOME'));
+	
+	
+$_cwd = getcwd(); 	
+
+chdir(getenv('FRDL_HOME'));
+	
+	
+$workspaces = false;
+
+$_dir = getenv('FRDL_HOME') . \DIRECTORY_SEPARATOR . '.frdl';
+//if(!is_dir($_dir)){
+ $g = (file_exists("frdl.workspaces.php")) ? [realpath("frdl.workspaces.php")] : glob("frdl.workspaces.php");	
+ if(0===count($g)){
+	 $g = array_merge(glob(str_replace(\DIRECTORY_SEPARATOR, '/', getcwd())."/frdl.workspaces.php"),
+					  glob($_homeg."/frdl.workspaces.php"), glob($_homeg."/*/frdl.workspaces.php"), 
+					  glob($_homeg."/*/*/frdl.workspaces.php"));
+ }
+  if(0<count($g)){
+	//	$_dir = dirname($g[0]);	
+	  $workspaces = require $g[0];
+	  if(isset($workspaces['Frdlweb'])){
+		$_dir = $workspaces['Frdlweb']['DIR'];		   
+	  }else{
+		 foreach($workspaces as $name => $w){
+			if(isset($w['DIR']) && is_dir($w['DIR'])){
+				$_dir = $w['DIR'];
+			  break;	  
+			}
+		 }
+	  }
+	  
+  }
+//}
+	
+	  
+	$_ENV['FRDL_WORKSPACE']= rtrim($_dir, '\\/');
+	putenv('FRDL_WORKSPACE='.$_ENV['FRDL_WORKSPACE']);
+
+	
+	  
+ $_f = $_ENV['FRDL_WORKSPACE']. \DIRECTORY_SEPARATOR.'frdl.workspaces.php';
+ if(is_array($workspaces) 
+	&& (!file_exists("frdl.workspaces.php") || time()-$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] > filemtime("frdl.workspaces.php")) 
+	&& is_dir($_ENV['FRDL_WORKSPACE']) && is_file($_f) ){
+	 
+	// $exports = var_export($workspaces, true);
+$code = <<<PHPCODE
+<?php
+	return require '$_f';		   
+PHPCODE;
+
+ file_put_contents("frdl.workspaces.php", $code);	 
+ }
+	  
+	 if(!is_dir($_ENV['FRDL_WORKSPACE'])){
+		mkdir($_ENV['FRDL_WORKSPACE'], 0755, true); 
+	 }	
+	
+
+$_ENV['FRDL_HPS_CACHE_DIR'] = $_dir . \DIRECTORY_SEPARATOR .\get_current_user() . \DIRECTORY_SEPARATOR. 'cache'. \DIRECTORY_SEPARATOR;
+putenv('FRDL_HPS_CACHE_DIR='.$_ENV['FRDL_HPS_CACHE_DIR']);
+//putenv('TMP='.$_ENV['FRDL_HPS_CACHE_DIR']);
+//ini_set('sys_temp_dir', realpath($_ENV['FRDL_HPS_CACHE_DIR']));	
+	 if(!is_dir($_ENV['FRDL_HPS_CACHE_DIR'])){
+		mkdir($_ENV['FRDL_HPS_CACHE_DIR'], 0755, true); 
+	 }
+
+
+$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = rtrim($_ENV['FRDL_HPS_CACHE_DIR'], \DIRECTORY_SEPARATOR).\DIRECTORY_SEPARATOR.'psr4'.\DIRECTORY_SEPARATOR;
+putenv('FRDL_HPS_PSR4_CACHE_DIR='.$_ENV['FRDL_HPS_PSR4_CACHE_DIR']);
+
+	 if(!is_dir($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])){
+		mkdir($_ENV['FRDL_HPS_PSR4_CACHE_DIR'], 0755, true); 
+	 }
+
+	
+
+
+chdir($_cwd);
+
+});
 
 /**
 * 
@@ -1749,18 +1956,21 @@ $codeWrap.= "\r\n"."\r\n". trim($code);
 */
  $run = function($file = null, $doRun = false){
  	$args = func_get_args();
- 	//if (!headers_sent()){
- 	//  header_remove();
- 	//}
+
  	$MimeVM = new MimeVM($args[0]);
  	if($doRun){
+		set_time_limit(min(900, ini_get('max_execution_time') + 300));
+ 
+	//	if (!headers_sent()){ 	  
+//			header_remove(); 	
+//		}
 		$MimeVM('run');
 	}
  	return $MimeVM;
  };
  
  
-$included_files = get_included_files();  
+$included_files = \get_included_files();  
 if(((!defined('___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___') || false === ___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___)
 	&& (!defined('\___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___') || false === \___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___)
 	&& (!in_array(__FILE__, $included_files) || __FILE__===$included_files[0])
@@ -1799,10 +2009,10 @@ class StubRunner implements StubRunnerInterface
 	   */
 	}
  	public function loginRootUser($username = null, $password = null) : bool{
-		return \Webfan\App\Shield::getInstance($this->getStub(), \frdl\i::c())->isAdmin(null,true, $username, $password);
+		return \Webfan\App\Shield::getInstance($this->getStub(), \frdl\i::c(), false)->isAdmin(null,true, $username, $password);
 	}
 	public function isRootUser() : bool{
-		return \Webfan\App\Shield::getInstance($this->getStub(), \frdl\i::c())->isAdmin(null,false);
+		return \Webfan\App\Shield::getInstance($this->getStub(), \frdl\i::c(), false)->isAdmin(null,false);
 	}
 	public function getStubVM() : StubHelperInterface{
 		return $this->MimeVM;
@@ -1834,7 +2044,7 @@ class StubRunner implements StubRunnerInterface
 	}
 	
 	public function getShield(){
-		return \Webfan\App\Shield::getInstance($this->getStub(), \frdl\i::c());
+		return \Webfan\App\Shield::getInstance($this->getStub(), \frdl\i::c(), false);
 	}
 }
 	$StubRunner = new StubRunner($MimeVM);
@@ -1875,91 +2085,75 @@ Content-Disposition: php ;filename="$STUB/bootstrap.php";name="stub bootstrap.ph
 
 
 
-	
 
-if ( !function_exists('sys_get_temp_dir')) {
-  function sys_get_temp_dir() {
-    if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
-    if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
-    if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
-    $tempfile=tempnam(__FILE__,'');
-    if (file_exists($tempfile)) {
-      unlink($tempfile);
-      return realpath(dirname($tempfile));
-    }
-    return null;
-  }
-} 	
-	
+set_time_limit(min(120, intval(ini_get('max_execution_time')) + 120));
+
+//chmod(dirname($this->location), 0755);
+//chmod($this->location, 0755);
+
+//sys_temp_dir
 
 
-call_user_func(function(){
-	
-$getRootDir;	
- $getRootDir = (function($path = null) use(&$getRootDir){
-	if(null===$path){
-		$path = $_SERVER['DOCUMENT_ROOT'];
-	}
-
-		
- if(''!==dirname($path) && '/'!==dirname($path) //&& @chmod(dirname($path), 0755) 
-    &&  true===@is_writable(dirname($path))
-    ){
- 	return $getRootDir(dirname($path));
- }else{
- 	return $path;
- }
-
- });//end of $getRootDir
-
-
-$_ENV['FRDL_HPS_CACHE_DIR'] = $getRootDir($_SERVER['DOCUMENT_ROOT']) 
-	. \DIRECTORY_SEPARATOR 
-	. '.frdl' . \DIRECTORY_SEPARATOR .\get_current_user() . \DIRECTORY_SEPARATOR. 'cache'. \DIRECTORY_SEPARATOR;
-putenv('FRDL_HPS_CACHE_DIR='.$_ENV['FRDL_HPS_CACHE_DIR']);
-
-
-$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = rtrim($_ENV['FRDL_HPS_CACHE_DIR'], \DIRECTORY_SEPARATOR).\DIRECTORY_SEPARATOR.'psr4'.\DIRECTORY_SEPARATOR;
-putenv('FRDL_HPS_PSR4_CACHE_DIR='.$_ENV['FRDL_HPS_PSR4_CACHE_DIR']);
-
-
-$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - filemtime($this->location);
-
-/*
-$_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
-                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR .\get_current_user() . \DIRECTORY_SEPARATOR. 'cache-frdl' . \DIRECTORY_SEPARATOR. 'psr4'. \DIRECTORY_SEPARATOR
-					  );
-*/
-});
 
 spl_autoload_register(array($this,'Autoload'), true, true);
 
+ try{
+   $f = 	 $this->get_file($this->document, '$HOME/apc_config.php', 'stub apc_config.php');
+   if($f)$config = $this->_run_php_1($f);	
+  if(!is_array($config) ){
+	$config=[];  
+  }
+ }catch(\Exception $e){
+		$config=[];  
+ }
 
 
+ $configChanged = false;
+
+  if(!isset($config['$HOME']) ){
+	  $config['$HOME'] = getenv('FRDL_HOME');
+      $configChanged = true;
+  }
+  
+  if(!isset($config['workspace']) ){
+	$config['workspace'] = 'frdl.webfan.de';  
+      $configChanged = true;
+  }
+
+/*
+if(true===$configChanged && $f){
+   $f->setBody('
+    return '.var_export($config, true).';
+   ');
+   $this->location = $this->location;	
+}
+	*/	
+
+$workspace = $config['workspace'];   
+$version = 'latest'; 
 
  try{
-  $version = $this->_run_php_1($this->get_file($this->document, '$HOME/version_config.php', 'stub version_config.php'));	
+  $f = $this->get_file($this->document, '$HOME/version_config.php', 'stub version_config.php');	
+  if($f)$version = $this->_run_php_1($f);	
   if(is_array($version) && isset($version['version']) ){
 	$version=$version['version'];  
   }
  }catch(\Exception $e){
 	$version = 'latest'; 
  }
-call_user_func(function($version){
+call_user_func(function($version,$workspace){
 	if(!class_exists(\Webfan\Psr4Loader\RemoteFromWebfan::class))return;
-  $loader = \Webfan\Psr4Loader\RemoteFromWebfan::getInstance('webfan.de', true, $version);
-}, $version);
+  $loader = \Webfan\Psr4Loader\RemoteFromWebfan::getInstance($workspace, true, $version, true);
+}, $version, $workspace);
+
+
 
 
 
 
 \frdl\webfan\Autoloading\SourceLoader::repository('frdl'); 
-
-\frdl\webfan\App::God(true, 'frdl\webfan\Autoloading\Autoloader','AC boot');
-
-
- //\frdl\webfan\Autoloading\SourceLoader::top() -> unregister(array(frdl\webfan\Autoloading\SourceLoader::top(),'autoloadClassFromServer'));
-
+\frdl\webfan\App::God(true,  \frdl\webfan\Autoloading\Autoloader::class,'AC boot');
+\frdl\webfan\Autoloading\SourceLoader::top() -> unregister(array(\frdl\webfan\Autoloading\SourceLoader::top(),'autoloadClassFromServer'));
 
 
 
@@ -1969,15 +2163,16 @@ call_user_func(function($version){
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/apc_config.php";name="stub apc_config.php"
-Content-Md5: 2b3c71f8935deb8b64b289ba1a7873e5
-Content-Sha1: a066c90ff28df3a089f2e1fad010a21be117f15d
-Content-Length: 203
+Content-Md5: 95c413f67b8c20860030be244a6a130c
+Content-Sha1: 286f3a82f3caa283dbc795d2972e065adb004076
+Content-Length: 201
 
-<?php
+
+	
 			    return array (
-  'hashed_password' => '$2y$10$/zm80v5RXbpMwawjdiQrQ./3e1yR.OL8y82qhqdVdJ6bcTuBBnAbi',
+  'hashed_password' => '$2y$10$0nQDX4xic.E.AXm9yzjmC.vyg61OmiMGFMmUpFmKlUSFD/1CF.Gba',
   'workspace' => 'frdl.webfan.de',
-  'installed_from_hps_blog_id' => 24,
+  'installed_from_hps_blog_id' => 113,
 );
 				
 			
@@ -1985,35 +2180,12 @@ Content-Length: 203
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/detect.php";name="stub detect.php"
-Content-Md5: 54121bd715a59f3f34dbf4c03ef6ab6f
-Content-Sha1: df40def24e6417f17767b05aa4eaad465969924e
-Content-Length: 5880
+Content-Md5: 5d80996a1b7eb07944a73d8667fcedf0
+Content-Sha1: 72c84b21fa429b6882a40ea46870a11a26414b3c
+Content-Length: 5265
 
 
-	          ini_set("session.auto_start" , '0'); // Auto-start session
-              ini_set("session.gc_probability" , 10); // Garbage collection in % MUST be > 0
-              ini_set("session.serialize_handler", 'php'); // How to store data
-              ini_set("session.use_cookies" , '1'); // Use cookie to store the session ID
-              ini_set("session.gc_maxlifetime" , 24 * 60 * 60); // Sekunden Inactivity timeout for user sessions
-              ini_set("url_rewriter.tags" , ''); // verhindern, dass SID an URL gehaengt wird
-
-  \frdl\webfan\Autoloading\SourceLoader::top() -> unregister(array(\frdl\webfan\Autoloading\SourceLoader::top(),'autoloadClassFromServer'));	
-
-
-
-
-
-
-
-
-
-\frdl\webfan\App::God(false)->addFunc('refreshPageIf', (function (
-
- 
- 
- 
-) {
-
+   \frdl\webfan\App::God(false)->addFunc('refreshPageIf', function(){
 
   $refreshAfter = 1;
   $conditionFn = null;
@@ -2245,17 +2417,19 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
           if($callback){
           	 call_user_func_array($callback, []);   				
 		  }
-	   } 
-
- 
-  
-
-
-		
-}));
+	   } 	
+});
 
 
 
+
+
+
+call_user_func(function(){
+ $frdl_polyfill_registered = \frdl_polyfill::defined;	
+});
+
+$AppShield = \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false);
 
 
 
@@ -2263,35 +2437,20 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 
 	
 
-call_user_func(function(){
- $frdl_polyfill_registered = \frdl_polyfill::defined;	
-});
 
-$AppShield = \Webfan\App\Shield::getInstance($this, \frdl\i::c());
+ini_set('display_errors','on');
+error_reporting(\E_ERROR | \E_WARNING | \E_PARSE);	
 
 
 
+	
 
 --4444EVGuDPPT
 Content-Type: application/x-httpd-php;charset=utf-8
 Content-Disposition: php ;filename="$HOME/index.php";name="stub index.php"
 
 
-//ini_set('display_errors',1);
-//error_reporting(\E_ALL);
-
-
-
-/*
-if( (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) && intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])=== -1) ){
-	\webfan\hps\patch\Fs::pruneDir($_ENV['FRDL_HPS_PSR4_CACHE_DIR'], 0, true, false);
-}
-*/
-
-	
-//$AppShield = new \Webfan\App\Shield(new \UMA\DIC\Container(), $this, true); 
-//$AppShield = \Webfan\App\Shield::getInstance($this, new \UMA\DIC\Container());
-$AppShield = \Webfan\App\Shield::getInstance($this, \frdl\i::c());
+$AppShield = \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false);
 	
 	
 	if(isset($_REQUEST['web'])){
@@ -2320,7 +2479,7 @@ if(false !==$webfile){
 	
 	die();
 }else{	
-  \Webfan\App\Shield::getInstance($this, \frdl\i::c())->index('/'/*\$_SERVER['REQUEST_URI']*/);
+  \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->index('/');
 }
 
 
@@ -4526,16 +4685,217 @@ final class Autoloader extends SourceLoader implements \frdl\common\Stream
 Content-Disposition: "php" ; filename="$HOME/version_config.php" ; name="stub version_config.php"
 Content-Type: application/x-httpd-php
 
-<?php 
-			    return array (
-  'time' => 1585040184,
-  'version' => '0.0.8.865335',
+<?php return array (
+  'time' => 1589426130,
+  'version' => '0.0.8.5251281',
 ); ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/frdl/Lint/Php.php" ; name="class frdl\Lint\Php"
+Content-Type: application/x-httpd-php
+
+<?php  
+
+namespace frdl\Lint;
+
+class Php
+{
+
+ protected $cacheDir = null;	
+	
+ public function __construct($cacheDir = null){
+    $this->cacheDir = $cacheDir;
+ }
+	
+	
+  public function setCacheDir($cacheDir = null){
+	  $this->cacheDir = $cacheDir;
+	  return $this;
+ }
+	
+	
+ public function getCacheDir(){
+	 if(null!==$this->cacheDir && !empty($this->cacheDir)){
+	    return $this->cacheDir;
+	 }
+	 
+   if(!isset($_ENV['FRDL_HPS_CACHE_DIR']))$_ENV['FRDL_HPS_CACHE_DIR']=getenv('FRDL_HPS_CACHE_DIR');	 
+
+	  $this->cacheDir = 
+		(  isset($_ENV['FRDL_HPS_CACHE_DIR']) && !empty($_ENV['FRDL_HPS_CACHE_DIR']))
+		  ? $_ENV['FRDL_HPS_CACHE_DIR'] 
+                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR . get_current_user(). \DIRECTORY_SEPARATOR . 'cache' . \DIRECTORY_SEPARATOR ;	  
+	  
+	 $this->cacheDir = rtrim($this->cacheDir, '\\/'). \DIRECTORY_SEPARATOR.'lint';
+	 
+	 if(!is_dir($this->cacheDir)){
+		mkdir($this->cacheDir, 0755, true); 
+	 }
+	 
+	 
+	  return $this->cacheDir;
+ }
+	
+ public function lintString($source){
+	 $tmpfname = tempnam($this->getCacheDir(), 'frdl_lint_php');
+	 file_put_contents($tmpfname, $source);
+	 $valid = $this->checkSyntax($tmpfname, false);
+	 unlink($tmpfname);
+	 return $valid;
+ }
+
+ public function lintFile($fileName, $checkIncludes = true){	   
+	// $o = new self;
+	// $o->setCacheDir($o->getCacheDir());
+	 return call_user_func_array([$this, 'checkSyntax'], [$fileName, $checkIncludes]);
+ }
+	
+ public static function lintStringStatic($source){
+	 $o = new self;
+	 $tmpfname = tempnam($o->getCacheDir(), 'frdl_lint_php');
+	 file_put_contents($tmpfname, $source);
+	 $valid = $o->checkSyntax($tmpfname, false);
+	 unlink($tmpfname);
+	 return $valid;
+ }
+
+ public static function lintFileStatic($fileName, $checkIncludes = true){	 	 
+	 $o = new self;
+	 $o->setCacheDir($o->getCacheDir());
+	 return call_user_func_array([$o, 'checkSyntax'], [$fileName, $checkIncludes]);
+ }   
+	
+	
+ public static function __callStatic($name, $arguments){
+	 $o = new self;
+	 return call_user_func_array([$o, $name], $arguments);
+ }	
+	
+	
+ public function checkSyntax($fileName, $checkIncludes = false){
+        // If it is not a file or we can't read it throw an exception
+      // if(!is_file($fileName) || !is_readable($fileName))
+	  if(!file_exists($fileName))
+            throw new \Exception("Cannot read file ".$fileName);
+       
+        // Sort out the formatting of the filename
+       $fileName = realpath($fileName);
+       
+        // Get the shell output from the syntax check command
+        $output = shell_exec(sprintf('%s -l "%s"',  (new \webfan\hps\patch\PhpBinFinder())->find(), $fileName));
+       
+        // Try to find the parse error text and chop it off
+        $syntaxError = preg_replace("/Errors parsing.*$/", "", $output, -1, $count);
+       
+        // If the error text above was matched, throw an exception containing the syntax error
+        if($count > 0)
+            //throw new \Exception(trim($syntaxError));
+			return 'Errors parsing '.print_r([$output, $count],true);
+       
+        // If we are going to check the files includes
+        if($checkIncludes)
+        {
+            foreach($this->getIncludes($fileName) as $include)
+            {
+                // Check the syntax for each include
+				$tCheck = $this->checkSyntax($include, $checkIncludes);
+               if(true!==$tCheck){
+				 return $tCheck;   
+			   }
+            }
+        }
+	 
+	  return true;
+    }
+   
+   public function getIncludes($fileName)
+    {
+        // NOTE that any file coming into this function has already passed the syntax check, so
+        // we can assume things like proper line terminations
+           
+        $includes = array();
+        // Get the directory name of the file so we can prepend it to relative paths
+        $dir = dirname($fileName);
+       
+        // Split the contents of $fileName about requires and includes
+        // We need to slice off the first element since that is the text up to the first include/require
+        $requireSplit = array_slice(preg_split('/require|include/i', file_get_contents($fileName)), 1);
+       
+        // For each match
+        foreach($requireSplit as $string)
+        {
+            // Substring up to the end of the first line, i.e. the line that the require is on
+            $string = substr($string, 0, strpos($string, ";"));
+           
+            // If the line contains a reference to a variable, then we cannot analyse it
+            // so skip this iteration
+            if(strpos($string, "$") !== false)
+                continue;
+           
+            // Split the string about single and double quotes
+            $quoteSplit = preg_split('/[\'"]/', $string);
+           
+            // The value of the include is the second element of the array
+            // Putting this in an if statement enforces the presence of '' or "" somewhere in the include
+            // includes with any kind of run-time variable in have been excluded earlier
+            // this just leaves includes with constants in, which we can't do much about
+            if($include = $quoteSplit[1])
+            {
+                // If the path is not absolute, add the dir and separator
+                // Then call realpath to chop out extra separators
+                if(strpos($include, ':') === FALSE)
+                    $include = realpath($dir.\DIRECTORY_SEPARATOR.$include);
+           
+                array_push($includes, $include);
+            }
+        }
+       
+        return $includes;
+    }
+	
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/webfan/hps/patch/PhpBinFinder.php" ; name="class webfan\hps\patch\PhpBinFinder"
+Content-Type: application/x-httpd-php
+
+<?php 
+/*
+  (new \webfan\hps\patch\PhpBinFinder)->find()
+*/
+
+namespace webfan\hps\patch;
+
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\PhpProcess;
+
+
+class PhpBinFinder
+{
+	public function find(){
+		$binFile = (new PhpExecutableFinder)->find();
+		if(empty($binFile)){
+			$binFile = dirname(dirname(dirname(ini_get('extension_dir')))). \DIRECTORY_SEPARATOR .'bin'. \DIRECTORY_SEPARATOR .'php';	
+		}
+
+		$tmpfname = tempnam(\sys_get_temp_dir(), 'phpcheck');
+		file_put_contents($tmpfname, "<?php echo 'php\n'; echo \PHP_VERSION.'\n';");
+		exec(sprintf('cd %s && %s %s 2>&1 ',dirname($tmpfname), $binFile, $tmpfname), $out, $status); 
+		unlink($tmpfname);
+
+		if(isset($out[0]) && 'php' === $out[0]){
+ 
+		}else{ 
+			exec('which php 2>&1 ', $out, $status); 
+			$binFile = (isset($out[0])) ? $out[0] : '/usr/bin/php';
+		}		
+	
+		return $binFile;
+	}	
+} ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$DIR_PSR4/Webfan/Psr4Loader/RemoteFromWebfan.php" ; name="class Webfan\Psr4Loader\RemoteFromWebfan"
 Content-Type: application/x-httpd-php
 
-<?php 
+<?php  
 
 
 namespace Webfan\Psr4Loader;
@@ -4550,16 +4910,17 @@ class RemoteFromWebfan
 	protected $server;
 	protected $domain;
 	protected $version;
-	protected $thisHost;
+	protected $allowFromSelfOrigin = false;
 	
 	protected static $instances = [];
 	
 	
-	function __construct($server = 'webfan.de', $register = true, $version = 'latest'){
+	function __construct($server = 'frdl.webfan.de', $register = true, $version = 'latest', $allowFromSelfOrigin = false){
+		$this->allowFromSelfOrigin = $allowFromSelfOrigin;
 		$this->version=$version;
 		$this->server = $server;	
-		$this->thisHost = (isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : $_SERVER['HTTP_HOST'];
-		$h = explode('.', $this->thisHost);
+		$_self = (isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : $_SERVER['HTTP_HOST'];
+		$h = explode('.', $_self);
 		$dns = array_reverse($h);
 		$this->selfDomain = $dns[1].'.'.$dns[0];
 		
@@ -4568,7 +4929,7 @@ class RemoteFromWebfan
 		$this->domain = $dns[1].'.'.$dns[0];
 		
 		
-		if($this->domain === $this->selfDomain && $this->server === $this->thisHost){
+		if(!$this->allowFromSelfOrigin && $this->domain === $this->selfDomain){
 		  $register = false;	
 		}
 		
@@ -4578,9 +4939,9 @@ class RemoteFromWebfan
 	}
 	
 	
-  public static function getInstance($server = 'webfan.de', $register = true, $version = 'latest'){
+  public static function getInstance($server = 'frdl.webfan.de', $register = false, $version = 'latest', $allowFromSelfOrigin = false){
 	  if(!isset(self::$instances[$server])){
-		  self::$instances[$server] = new self($server, $register, $version);
+		  self::$instances[$server] = new self($server, $register, $version, $allowFromSelfOrigin);
 	  }
 	  
 	 return self::$instances[$server];
@@ -4609,8 +4970,8 @@ class RemoteFromWebfan
 	}
 	  
 	  
-	//$url =	'https://'.$this->server.'/install/?salt='.$salt.'&source='. urlencode( str_replace('\\', '/', $class) . '.php').'&version='.$this->version;
-       $url =	'https://'.$this->server.'/install/?salt='.$salt.'&source='. $class.'&version='.$this->version;
+	$url =	'https://'.$this->server.'/install/?salt='.$salt.'&source='. $class.'&version='.$this->version;
+
 
 	$options = [
 		'https' => [
@@ -4620,7 +4981,7 @@ class RemoteFromWebfan
 		   ]
 	];
     $context  = stream_context_create($options);
-    $code = file_get_contents($url, false, $context);
+    $code = @file_get_contents($url, false, $context);
 	foreach($http_response_header as $i => $header){
 		$h = explode(':', $header);
 		if('x-content-hash' === strtolower(trim($h[0]))){
@@ -4650,14 +5011,16 @@ class RemoteFromWebfan
 	   }	   	
      }	
 
-	$code =ltrim($code, '<?php');
-	$code =rtrim($code, '?php>');	
+  $code = trim($code);
+  if('<?php' === substr($code, 0, strlen('<?php')) ){
+	  $code = substr($code, strlen('<?php'), strlen($code));
+  }
+    $code = trim($code, '<?php> ');
+  $codeWithStartTags = "<?php "."\n".$code;	
 		
-    return '<?php 
-	'.$code.' 
-	
-	';
+    return $codeWithStartTags;
  }
+	
 	
 	
 	public function __invoke(){
@@ -4666,8 +5029,7 @@ class RemoteFromWebfan
 	
 	protected function register($throw = true, $prepend = false){
 		
-		
-		if($this->domain === $this->selfDomain && $this->server === $this->thisHost){
+		if(!$this->allowFromSelfOrigin && $this->domain === $this->selfDomain){
 		   throw new \Exception('You should not autoload from remote where you have local access to the source (remote server = host)');
 		}		
 		
@@ -4681,18 +5043,27 @@ class RemoteFromWebfan
 	}
 	
   protected function Autoload($class){
-	$cacheFile = ((isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
+	  
+	  if(!isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])){
+		$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']=getenv('FRDL_HPS_PSR4_CACHE_LIMIT');  
+	  }
+	  if(!isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])){
+		$_ENV['FRDL_HPS_PSR4_CACHE_DIR']=getenv('FRDL_HPS_PSR4_CACHE_DIR');  
+	  }
+	  
+	  
+	$cacheFile = ((!empty($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
                    : sys_get_temp_dir() . \DIRECTORY_SEPARATOR . \get_current_user(). \DIRECTORY_SEPARATOR . 'cache-frdl' . \DIRECTORY_SEPARATOR. 'psr4'. \DIRECTORY_SEPARATOR
 					  )
 		          // .  basename($class). '.'. strlen($class) . '.'.sha1($class).'.php';
 	            	.  str_replace('\\', \DIRECTORY_SEPARATOR, $class). '.php';
-	//$cacheFile = str_replace('\\', \DIRECTORY_SEPARATOR, $cacheFile); 
+	
  
 
 	
 	if(file_exists($cacheFile) 
 	   && (!isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])  
-								   || (filemtime($cacheFile) > time() - ((isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) ) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) :  time()-24 * 60 * 60)) )){
+								   || (filemtime($cacheFile) > time() - ((isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) ) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) :  3 * 60 * 60)) )){
 	   require $cacheFile;
        return true;
 	}
@@ -4708,9 +5079,9 @@ class RemoteFromWebfan
 		  mkdir(dirname($cacheFile), 0755, true);
 		}
 		
-      if(isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) 
+      if(!empty($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) 
 		  && file_exists($cacheFile) 
-	      && (filemtime($cacheFile) < time() - ((isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) ) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) :  time()-24 * 60 * 60)) ){
+	      && (filemtime($cacheFile) < time() - ((!empty($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) ) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) :  3 * 60 * 60)) ){
 		     unlink($cacheFile);
       }	
 	 //  if(!file_put_contents($cacheFile, $code)){
@@ -4727,9 +5098,13 @@ class RemoteFromWebfan
 			unlink($cacheFile);
 		}
 	  	return true;	
-	}elseif(false !==$code){
-		$code =ltrim($code, '<?php');
-		$code =rtrim($code, '?php>');	
+	}elseif(false !==$code){ 
+		$code = trim($code);  
+		if('<?php' === substr($code, 0, strlen('<?php')) ){
+			$code = substr($code, strlen('<?php'), strlen($code)); 
+		}   
+		$code = trim($code, '<?php> ');  
+		$codeWithStartTags = "<?php "."\n".$code;	
 		eval($code);
 		return true;	
 	}
@@ -5312,6 +5687,74 @@ class Context
       return $context;
   }
   
+
+ public function import(string $file, bool $throw = null){
+	  if(!\is_bool($throw)){
+	    $throw = false;	  
+	  }
+	 
+    $exists = \file_exists($file);
+    if(!$exists && $throw){
+	throw new \Exception(\sprintf('File "%s" does not exist in %s', $file, __METHOD__));    
+    }elseif(!$exists){
+	return false;    
+    }
+    $extension = \pathinfo($file, \PATHINFO_EXTENSION); 
+  
+  if('json' === $extension){	 
+    $data = \file_get_contents($file);
+    $data = \json_decode($data);
+    $data = (array)$data;	  
+  }elseif('php' ===\substr($extension,0,\strlen('php'))){
+	$data = require $file;  
+  }
+	 
+	foreach($data as $key => $value){
+	   $this->context->set($key, $value);
+	}
+    	
+   return true;	 
+ }
+	
+	
+  public function export(string $file, string $prepend = null, bool $makeDir = null, bool $throw = null){
+	  if(!\is_bool($makeDir)){
+	    $makeDir = true;	  
+	  }
+	  if(!\is_bool($throw)){
+	    $throw = true;	  
+	  }	  
+	  if(!\is_string($prepend)){
+	    $prepend = '';	  
+	  }	  
+	  $dir = \dirname($file);
+	//  $exports = \var_export($this->context->all(), true);
+	  $exports = \var_export($this->context->flatten('.', null, $prepend), true);
+	  $methodDescription = __METHOD__;
+	  $time = time();
+	  
+	  $php = <<<PHPCODE
+<?php
+/**
+* This file was generated automatically by
+* @method	$methodDescription
+* @time		$time
+* @role		data
+*/
+return $exports;
+PHPCODE;
+	  
+	 $sucess = ( ( \is_dir($dir) && \is_writable($dir) )
+		 || (true === $makeDir && @\mdir($dir, 0755, true))
+	       )
+		 && @\file_put_contents($file, $php);
+	  
+	  if(true!==$sucess && false !== $throw){
+	    throw new \Exception(\sprintf('Error writing "%s" in %s', $file, __METHOD__));	  
+	  }	  
+	  
+   return $sucess;
+  }
 	
   public function resolvePlaceholder(string $str,array $data = null, string $prefix = '${', string $suffix = '}'){
 	  if(null === $data){
@@ -5398,7 +5841,7 @@ namespace frdl;
 
 
 use Psr\Container\ContainerInterface;
-
+use frdl\NotFoundException;
 
 
 class i extends \UMA\DIC\Container implements ContainerInterface
@@ -5411,9 +5854,7 @@ class i extends \UMA\DIC\Container implements ContainerInterface
 	
     public function __construct(array $entries = null){   
 	   $this->factories = new \SplObjectStorage();
-     //  $this->container = (is_object($entries) && $entries instanceof \webfan\hps\patch\ngScope) ? $entries : new \webfan\hps\patch\ngScope($entries);
 		$this->container = (null===$entries) ? [] : $entries;
-	//	parent::__construct($entries);
     }
 	
 	public static function c(array $entries = null) :i{
@@ -5426,38 +5867,13 @@ class i extends \UMA\DIC\Container implements ContainerInterface
 	
     public function set(string $id, $entry): void
     {
-		//if($this->has($id) && is_callable($entry) && is_callable($this->container[$id]) ){
-			//$this->extend($id, $entry);
-		//}else{		
             $this->container[$id] = $entry;
-		//}
     }	
 	
     public function has($id){
         return \array_key_exists($id, $this->container);
     }	
-    /**
-	
-    public function keys(){
-        return \array_keys($this->container);
-    }
-	
 
-     * Extends an object definition.
-     *
-     * Useful when you want to extend an existing object definition,
-     * without necessarily loading that object.
-     *
-     * @param string   $id       The unique identifier for the object
-     * @param callable $callable A service definition to extend the original
-     *
-     * @return callable The wrapped callable
-     *
-     * @throws UnknownIdentifierException        If the identifier is not defined
-     * @throws FrozenServiceException            If the service is frozen
-     * @throws InvalidServiceIdentifierException If the identifier belongs to a parameter
-     * @throws ExpectedInvokableException        If the extension callable is not a closure or an invokable object
- */
     public function extend($id, $callable)
     {
         if (!$this->has($id)) {
@@ -5475,11 +5891,7 @@ class i extends \UMA\DIC\Container implements ContainerInterface
         }
         return $this->container[$id] = $extended;
     }
-	
-	
-	
-	
-	
+
 	
 	
     public function raw($id)
@@ -5516,7 +5928,6 @@ class i extends \UMA\DIC\Container implements ContainerInterface
 
         if (!is_null($this->container[$id])
 			&& (is_object($this->container[$id]) || is_callable($this->container[$id]) )
-		//	&& isset($this->factories[$this->container[$id]])
 			&& $this->factories->contains($this->container[$id])
 		   ) {
             return $this->container[$id]($this);
@@ -5530,27 +5941,7 @@ class i extends \UMA\DIC\Container implements ContainerInterface
         return $this->container[$id];
     }
 	
-	/*
-   public function get($id)
-    {
-        if (!$this->has($id)) {
-            throw new class extends \LogicException implements \Psr\Container\NotFoundExceptionInterface {};
-        }
 
-
-	   
-        if (!$this->resolved($id)) {
-            $this->container[$id] = \call_user_func($this->container[$id], $this);
-        }
-	   
-        if ($this->container[$id] instanceof \Closure || (is_object($this->container[$id]) && method_exists($this->container[$id], '__invoke') ) ) {
-            $this->container[$id] = \call_user_func($this->container[$id], $this);
-        }
-
-        return $this->container[$id];
-    }
-	
-	  */ 
 	
 	  public function resolved(string $id): bool {
         if (!$this->has($id)) {
@@ -6367,7 +6758,8 @@ class EventEmitter extends Element{
 									  		$ready = false;
 									  		foreach($that->Iterator('Array', $eventArray) as $event){
 									  			  $k = array_search($event, $eventArray);
-									  			  if(false===$k || null===$eventData[$k]){
+									  		//	  if(false===$k || null===$eventData[$k]){
+												if(false===$k || !isset($eventData[$k])){
 												  	 $waiting = true;
 												  	 break;
 												  }
@@ -6391,7 +6783,9 @@ class EventEmitter extends Element{
 									  	}
 									  	;								  	
 									  	
-									  	$updateState = function ($eventName) use ( &$eventArray, &$eventData, &$stateCheck){
+									
+		                                                   
+		$updateState = function ($eventName) use ( &$eventArray, &$eventData, &$stateCheck){
 									  		$index = array_search($eventName, $eventArray);
 									  		return function ($data = null) use ( &$eventData, &$index, &$stateCheck){
 									  			if(null===$data)
@@ -6410,7 +6804,7 @@ class EventEmitter extends Element{
 									  	$stateReady = function ($s) use ( &$eventData, &$eventArray)
 									  	{
 									  		 $k = array_search($s, $eventArray);
-									  		 return (false===$k || null===$eventData[$k]) ? false : true;
+									  		 return (false===$k || !isset($eventData[$k])) ? false : true;
 									  	}
 									  	;
 									  	
@@ -6424,15 +6818,29 @@ class EventEmitter extends Element{
 									  	
 									  	
 									  	
-									  	$addState =	function () use ( &$eventArray, &$updateData, $updateState, $listen, &$that, $addState)
+									  										 
+		                                     
+		$addState =	function () use ( &$eventArray, &$updateData, $updateState, $listen, &$that)
 									  	{
 									  		$events = func_get_args();
 									  		
 									  		foreach($that->Iterator('Array', $events) as $event){
-                                                if(is_array($event)){
-                                                	foreach($event as $ev){
-													   call_user_func_array($addState, array($ev));
-													}
+                                              
+												if(is_array($event)){                                                	
+												
+												  foreach($event as $ev){													
+												
+												  	$index = array_search($ev, $eventArray);
+									  				if($index === false)
+									  				{
+									  					array_push($eventArray, $ev);
+									  					$index = count($eventArray) - 1;
+									  				}
+									  				$updateData[$index] = $updateState($ev);
+
+									  				 call_user_func_array($listen, array($ev,$updateData[$index])); 													
+													
+												   }
 												}else{
 													$index = array_search($event, $eventArray);
 									  				if($index === false)
@@ -6449,15 +6857,17 @@ class EventEmitter extends Element{
 									  	};
 									  	
 									  	
-			foreach($that->Iterator('Array', $eventArray) as $event){
-                $addState($event);
+			foreach($that->Iterator('Array', $eventArray) as $event){                
+				$addState($event);
 			}										  	
 
 
        /* $finStateObj = new \O; */
-       $fo = new \O;
+      // $fo = new \O;
+       $fo = new \stdclass;		
        $fo->cancel = $clear;
        $fo->add = $addState;
+       $fo->addState = $addState;
        $fo->events = $eventArray;
        $fo->status = $eventData;
        $fo->stateReady = $stateReady;
@@ -7100,7 +7510,7 @@ Content-Type: application/x-httpd-php
 
 namespace Webfan\App;
 
-
+use Webfan\App\TerminalEmulator;
 
 final class Shield implements \Finite\StatefulInterface, \Serializable
 {
@@ -7113,10 +7523,18 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	const WORKSPACES_FILENAME = 'frdl.workspaces.php';
 	const VERSION_FILENAME = 'frdl.version.config.php';
 	const BASH_FILENAME = '.bashrc_profile';
+	//const BASH_FILENAME = '.bashrc-frdl';
+	const PROJECT_FILENAME = 'frdl.project.json';
+	const DEPLOYMENT_FILENAME = 'frdl.deployment.json';
+	const STAGES_FILENAME = 'frdl.stages.json';
+	const CONFIG_PROJECT_FILENAME = 'frdl.project.config.php';
+	
+	const SESSION_NAME = 'FRDLADMINSESSID';
 	
 	const BLUE = 0;
 	const GREEN = 1;
 	
+	protected $uri;
     protected $updateStatus;
     protected $appStatus;
     protected $userStatus;
@@ -7137,30 +7555,53 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	protected static $instance = null;
 	
 	protected $_emitter = null;
-	
+
+	protected $__configLoaded = false;
 	public static $enableLoginPost = false;
+	protected static $created_sessions = [];
 	
-   public function __construct(\Psr\Container\ContainerInterface $container = null, $stub = null, $initialize = false, $enableLoginPost = null){	
+	
+   public function __construct(\Psr\Container\ContainerInterface $container = null, $stub = null, $initialize = false, $enableLoginPost = false){	
+	   
+	   //ob_start();
+	  // ini_set('display_errors','on');
+       //error_reporting(\E_ALL);
+	   
+	   $isFirst = null === self::$instance;
+	   
+	   
 	   if(is_bool($enableLoginPost)){
 		   self::$enableLoginPost = $enableLoginPost;
 	   }
 	   $this->setStub($stub);
 	   $this->state = null; 	 
 	   
-	   if(true===$initialize || null === self::$instance ){	  
-		   $this->setContainer((null===$container) ? \frdl\i::c() : $container);
-		   call_user_func_array([$this, 'initialize'], []);   
-	   }else{
-		   $this->container = self::$instance->getContainer();
+
+	          $this->setContainer((null===$container) ? \frdl\i::c() : $container);
+	   	         
+
+	   if(true===$initialize){		   
+		   
+	           $Event = new \webfan\hps\Event('initialize:before');	   
+			   $Event->setArgument('Shield', $this);	   
+			   $Event->setArgumentReference('container', $this->container);  	   
+			   $this->getEmitter()->emit($Event->getName(), $Event);   
+	   		   
+		   
+		    call_user_func_array([$this, 'initialize'], []);  
 	   }
-	   
 	   
    }
 	
+	public function __destruct(){
+	  	//  if($this->session_started()){
+		 //   $_SESSION[TerminalEmulator::SESSIONKEY]['cwd'] = getcwd();
+		//  }	
+	}
 	
-    public static function getInstance($stub = null, \Psr\Container\ContainerInterface $container = null, $enableLoginPost = null){
+    public static function getInstance($stub = null, \Psr\Container\ContainerInterface $container = null, $enableLoginPost = false){
 	   if(null === self::$instance){		 
-		  self::$instance = new self((null===$container) ? \frdl\i::c() : $container, $stub, true, $enableLoginPost); 		    
+		  self::$instance = new self((null===$container) ? \frdl\i::c() : $container, $stub, false, $enableLoginPost); 		    
 	  }
 	  
 	  return self::$instance;
@@ -7177,6 +7618,10 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	   }
    }
 	
+	public function getCacheBustKey(){
+	 return sha1( date('Y').date('W').'.'.max(filemtime($this->getStub()->location), 1).$this->getVersion(false).$this->getStub()->location);	
+	}
+	
 	public function terminate(){		
 
 		
@@ -7189,7 +7634,12 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 
  		
 	
- while($ob_status = ob_get_status(false) && (is_array($ob_status) && 0 < count($ob_status) ) && $ob_status[0]['status'] !== \PHP_OUTPUT_HANDLER_END && ob_get_level()){
+ while(($ob_status = ob_get_status(false)) 
+	   && $ob_status && is_array($ob_status) && 0 < count($ob_status)
+	   && isset($ob_status[0]) 
+	   && isset($ob_status[0]['status'])
+	   && $ob_status[0]['status'] !== \PHP_OUTPUT_HANDLER_END
+	   && ob_get_level()){
     ob_end_flush();
  }
 	
@@ -7212,19 +7662,16 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	
    public function __get($name){
 	   if('config' === $name){
-		    $this->config = (is_object($this->config) && $this->config instanceof \webfan\hps\patch\ngScope) ? $this->config :  $this->loadConfig()->config;
+		    $this->config = (true ===$this->__configLoaded && is_object($this->config) && $this->config instanceof \webfan\hps\patch\ngScope) ? $this->config :  $this->loadConfig()->config;
 		  return $this->config;   
 	   }elseif('updateAvailable' === $name){
 		  return !version_compare($this->getVersion(false), $this->v->latest, '>=');   
 	   }elseif('emitter' === $name){
-		   if(null === $this->_emitter){
-		      $this->_emitter =  $this->getContainer()->get('emitter'); 	   
-		   }
-		  return $this->_emitter;  
+		  return $this->getEmitter();  
 	   }
 	   
 	   
-	   if(null!==$this->container && $this->container->has($name)){
+	   if(null!==$this->container && $this->getContainer()->has($name)){
 		  return $this->container->get($name);
 	   }
 	   
@@ -7236,19 +7683,34 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
    }
 	
 	
-   public function session_started(){
-     if ( \php_sapi_name() !== 'cli' ) {
-        if ( version_compare(phpversion(), '5.4.0', '>=') ) {
-            return session_status() === \PHP_SESSION_ACTIVE ? true : false;
-        } else {
-            return session_id() === '' ? false : true;
-        }
-     }
-     return false;
-   }
+  public function getEmitter(){
+		   if(null === $this->_emitter){
+		       $this->_emitter =  $this->getContainer()->get('emitter');
+		 
+			   $emitter = $this->_emitter;
+			   $container = $this->container;
+	   
+          $this->_emitter->required(['loaded:version', 'Shield.initialized', 'initialize:before', 'loaded:config', 'loaded:config:caches'], function($states) use(&$emitter, &$container){	
+
+				   $Event = new \webfan\hps\Event('ready:for:checkForAutoSelfUpdate');		
+				   $Event->setArgument('event-states', $states);		
+				   $Event->setArgumentReference('container', $container);		
+				   $emitter->emit($Event->getName(), $Event); 	 
+			  
+		  }, false);	  
+			   
+			   
+	  
+	  		   $this->registerEvents(); 	 	   
+		   }
+	 return $this->_emitter;  	 
+  }
+	
+	
+	
 	
   public function getFinalStateMachine(){
-	return $this->container->get('webfan.app.fsm');  
+	return $this->getContainer()->get('webfan.app.fsm');  
   }
 	
   public function getFsm(){
@@ -7256,33 +7718,22 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
   }
 	
   public function getContainer(){
+	  if(!$this->container->has('emitter')){
+	     $this->container->register(new ShieldServiceProvider($this));
+	  }	  
+	  
 	  return $this->container;
   }
 
   protected function setContainer(\Psr\Container\ContainerInterface $container){
-	  $this->container=&$container;
-	  $this->container->register(new ShieldServiceProvider($this));
-	   //$this->getContainer()->register(new AppBuilderServiceProvider($this)); 	 
-		// moved to __get() :   $this->emitter =  $this->getContainer()->get('emitter'); 	
-	  $emitter = &$this->emitter;
-	  $this->emitter->required(['initialize:before', 'loaded:config', 'loaded:version', 'loaded:config:caches'], function($states) use(&$emitter, &$container){
-		  $Event = new \webfan\hps\Event('ready:for:checkForAutoSelfUpdate');
-		  $Event->setArgument('event-states', $states);
-		  $Event->setArgumentReference('container', $container);
-		  $emitter->emit($Event->getName(), $Event);
- 	  }, false);	  
-	  
-	  
-	 $this->registerEvents(); 
-	  
-	  
+	  $this->container=$container;
 	  return $this;
   }			
 	
 	
   public function getConfig(){
 	  
-	  $this->config = (is_object($this->config) && $this->config instanceof \webfan\hps\patch\ngScope) ? $this->config :  $this->loadConfig()->config;
+	  $this->config = (true ===$this->__configLoaded && is_object($this->config) && $this->config instanceof \webfan\hps\patch\ngScope) ? $this->config :  $this->loadConfig()->config;
 	  
 	  $this->config['baseUrlInstaller'] = (isset($this->config['baseUrlInstaller'])) 
 	? $this->config['baseUrlInstaller']
@@ -7297,6 +7748,11 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	  return $this;
   }		
   public function getStub(){
+	  if(null === $this->stub){
+	       $StubRunner = require __FILE__;		  
+           $this->stub = $StubRunner->getStub();
+	  }
+	  
 	  return $this->stub;
   }	
 		
@@ -7380,15 +7836,15 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
   public function updateSelf(){
 	
 	  
-	   set_time_limit(900);
+	   set_time_limit(180);
+	  $config = $this->getConfig();
+	
+	  if(empty($config['workspace']))$config['workspace']='frdl.webfan.de';
 	  
-	  try{
-	  $client = new \PhpJsonRpc\Client('https://'.$this->config->workspace.'/software-center/modules-api/rpc/0.0.2/',
+	  $client = new \PhpJsonRpc\Client('https://'.$config['workspace'].'/software-center/modules-api/rpc/0.0.2/',
     \PhpJsonRpc\Client::ERRMODE_EXCEPTION);
       $result = $client->call('frdl.apc.download', []);
-	  }catch(\Exception $e){
-		die($e->getMessage());  
-	  }
+
 	  
 	  if(!isset($result[1]) || !isset($result[1]['contents']) ){
 		 return false;  
@@ -7404,74 +7860,125 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	  
 	  $method = __METHOD__;
 	  $success = $mutex->synchronized(function () use ( $AppShield, $result, $method) : bool {
-		  try{
-			   set_time_limit(900);
+		 set_time_limit(300);
+		
 		   $tmpfname = tempnam($AppShield->getCacheDir(), 'frdl_stub');
-		  // $tmpfname_backup = tempnam($AppShield->getCacheDir(), 'frdl_stub_backup');
+		   $tmpfname_backup = tempnam($AppShield->getCacheDir(), 'frdl_stub_backup');
 			  
-			//$oldLocation = $AppShield->getStub()->location;
+		  $AppShield->getStub()->lint(false);
+		  
+			$oldLocation = $AppShield->getStub()->location;
 		  //  $oldConfig = self::getInstance()->getStubConfig();
 			  
 		    file_put_contents($tmpfname, base64_decode($result[1]['contents']));
            
 			  if(!\frdl\Lint\Php::lintFileStatic($tmpfname, false)){
-				   unlink($tmpfname); 
+				   unlink($tmpfname);
+				  trigger_error('Php parsing error in installer stub found, update failed in '.$method, \E_USER_ERROR);
 				  throw new \Exception('Php parsing error in installer stub found, update failed in '.$method);
 				  return false;  
 			  }
 		  
-	  try{
+		  
+		      $config = (is_object($AppShield->config) && $AppShield->config instanceof \webfan\hps\patch\ngScope) ? $AppShield->config : new \webfan\hps\patch\ngScope($AppShield->config);
+			  $oldStubConfig = $AppShield->getStubConfig();
+		  
+		  
+			try{
+			  if(isset($config->wsdir) && is_dir($config->wsdir) 		 
+				 && file_exists($config->wsdir.self::CONFIG_FILENAME) ){		  
+				  $configFileConfig = require $config->wsdir.self::CONFIG_FILENAME;		 
+			  }else{
+				 $configFileConfig = [];  
+			  }
+			}catch(\Exception $e){
+			   $configFileConfig = [];	
+			}
+			
+			  
+			  //unset($configFileConfig['hashed_password']);
+			//  unset($oldStubConfig['hashed_password']);
+			  
+			$newConfig =array_merge($oldStubConfig, $configFileConfig);  
+		// 	if(isset($newConfig['hashed_password']))unset($newConfig['hashed_password']);  
+
 		if(!defined('\___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___')){  
 		  define('\___BLOCK_WEBFAN_MIME_VM_RUNNING_STUB___', true);
 		}
+		  
+		  
 		  
 			   set_time_limit(900);
 		   //   $vm = \webfan\hps\Compile\MimeStub2::vm($tmpfname, strpos(file_get_contents($tmpfname), '__halt_compiler' ));	
 			  require $tmpfname;
 			  $vm = $run($tmpfname, false);
-			  
+			  $vm->lint(false);
+		    //
+			 
+			//  $newStubConfig = $vm->_run_php_1($vm->get_file($vm->document, '$HOME/apc_config.php', 'stub apc_config.php'));
+		  
 		       $vm->get_file($vm->document, '$HOME/apc_config.php', 'stub apc_config.php')
-			  ->  setBody('<?php
-			    return '.var_export($AppShield->getStubConfig(), true).';
+			  ->  setBody('
+			    return '.var_export(array_merge( $newConfig, [
+				  'hashed_password' => (isset($oldStubConfig['hashed_password'])) ? $oldStubConfig['hashed_password'] : $newConfig['hashed_password'], 
+				]), true).';
 			  ')
 			  ;			  
+			 /**/
+			
 			
 			//  $AppShield->clearPeristant();
 			 // \webfan\hps\patch\Fs::pruneDir($AppShield->getCacheDir('PSR4'), time() -  max(filemtime($vm->location), $time), true, true);
-		    \webfan\hps\patch\Fs::pruneDir($AppShield->getCacheDir(), 3600, true, true);
-			 //  usleep(100);
-	  }catch(\Exception $e){
-		  unlink($tmpfname);
-		print_r($e->getMessage());  
-		  return false;
-	  }  
-				    
+		 	 //  usleep(100);
+
+				 	
+	  
+			     
+			  
 			  $time = time();
-			  $vm->location = $AppShield->getStub()->location;	
-			 unlink($tmpfname); 
+			//  $vm->location = $AppShield->getStub()->location;	
+			  //file_put_contents($oldLocation, file_get_contents($tmpfname));
 			
-			/*	  
+			
+
+			  
+				  
+			  
+			  
+				  
 			  file_put_contents($tmpfname_backup, file_get_contents($oldLocation) );
 			
 			  try{			    
-			    file_put_contents($oldLocation, file_get_contents($tmpfname));
-			    $AppShield->setConfig($oldConfig, true, true);
+			   // file_put_contents($oldLocation, file_get_contents($tmpfname));
+				  $vm->location = $AppShield->getStub()->location;	
+				  
+			  //  $AppShield->setConfig($newConfig, true, true);
 			  }catch(\Exception $e){
 				 file_put_contents($oldLocation, file_get_contents($tmpfname_backup)); 
 		         print_r($e->getMessage());  
 		        return false;
 	         }  
 			  
-			  \webfan\hps\patch\Fs::pruneDir($AppShield->getCacheDir(), 900, true, true);
+			
 			  
 			  
-			  unlink($tmpfname); 
-			  unlink($tmpfname_backup); 
-			  */
-		    return true;
-		  }catch(\Exception $e){
-			return false;  
-		  }
+						  
+	    call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), function($CacheDir, $tmpfname, $tmpfname_backup){
+			if(file_exists($tmpfname)){
+				unlink($tmpfname); 
+			}
+			if(file_exists($tmpfname_backup)){
+				unlink($tmpfname_backup); 
+			}			
+		   \webfan\hps\patch\Fs::pruneDir($CacheDir, 12 * 60 * 60, true, true);
+	    }, $AppShield->getCacheDir(), $tmpfname, $tmpfname_backup);	  
+			  
+			  
+			  
+			  
+			  
+			  
+		  return true;
 	  });
 	  
 	  
@@ -7489,7 +7996,7 @@ final class Shield implements \Finite\StatefulInterface, \Serializable
 	//	  unset($export['wsdir']);
 		  
 		  $this->getStub()->get_file($this->stub->document, '$HOME/apc_config.php', 'stub apc_config.php')
-			  ->  setBody('<?php
+			  ->  setBody('
 			    return '.var_export($export, true).';
 			  ')
 			  ;		 
@@ -7533,6 +8040,9 @@ PHPCODE
 	  return $this;
   }	
 		
+	
+	
+	
   public function loadConfig(){
 	  /*
 	  		  isset($this->config['imports']['frdl.config.stub.php']) && 
@@ -7543,7 +8053,7 @@ PHPCODE
 		  isset($this->config['imports']['frdl.version.php']) && 
 		  isset($this->config['imports']['frdl.feature-implementations.php']) && 
 		  */
-	  
+	   $this->__configLoaded =true;
 	  
 	  if(!is_array($this->config) || !count($this->config) ){
 		  $this->setConfig($this->getStubConfig(), false, false);	 
@@ -7558,6 +8068,7 @@ PHPCODE
 	  
 //$this->config = new \webfan\hps\patch\ngScope([]);
 //$_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] = (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'])) ? intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) : time() - intval($this->latest->time);
+	  /*
 $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  max(0,
 										  time() - max((((!isset($this->config['autoupdate']) 
 													  || true === $this->config['autoupdate']
@@ -7567,35 +8078,46 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  max(0,
 												   filemtime($this->stub->location))
 										  );	  	  
 	  
+	  */
+    $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  time() - filemtime($this->stub->location);		  
 	  
 	$this->config->baseUrl = (isset($this->config->baseUrl)) ? $this->config->baseUrl : \webfan\hps\patch\Fs::getPathUrl();
     $this->config->baseUrlInstaller = (isset($this->config->baseUrlInstaller)) 
 	? $this->config->baseUrlInstaller 
-	: rtrim(\webfan\hps\patch\Fs::getPathUrl($_SERVER['PHP_SELF']), \DIRECTORY_SEPARATOR.'/ ').\DIRECTORY_SEPARATOR.basename($this->stub->location);	   
-	  
+	//: rtrim(\webfan\hps\patch\Fs::getPathUrl($_SERVER['PHP_SELF'], true), \DIRECTORY_SEPARATOR.'/ ').'/'.basename($this->stub->location);	   
+	// : explode('?', \webfan\hps\patch\Fs::getPathUrl($_SERVER['PHP_SELF'], true).$_SERVER['REQUEST_URI'], 2)[0]
+		: $this->config->baseUrl.basename($this->stub->location)
+		  ;
 	  
 	  if(isset($this->config->wsdir) && is_dir($this->config->wsdir) 
 		  && file_exists($this->config->wsdir.self::CONFIG_FILENAME) ){
 		  $i = require $this->config->wsdir.self::CONFIG_FILENAME;
 		  $this->config->import($i);
 	  }else{
-		set_time_limit(900);  
+		set_time_limit(120);  
+		  $time = time();
 		//$finder = $this->container->get('finder');	
 		$finder =  new \Symfony\Component\Finder\Finder();
 		$finder->name('*'.self::CONFIG_FILENAME)								
 			         ->ignoreUnreadableDirs()
 					 ->ignoreVCS(false)
 			;			
-		  if(!isset($this->config->wsdir) || !is_dir($this->config->wsdir)){
+		//  if(!isset($this->config->wsdir) || !is_dir($this->config->wsdir)){
 			$sDir = \webfan\hps\patch\Fs::getRelativePath(getcwd(),dirname($this->stub->location));
-		  }else{
-			$sDir = \webfan\hps\patch\Fs::getRelativePath(getcwd(),$this->config->wsdir);  
-		  }
+		 // }
 		  
-		  $sDir_2 = \webfan\hps\patch\Fs::getRelativePath(getcwd(), \webfan\hps\patch\Fs::getRootDir(dirname($_SERVER['DOCUMENT_ROOT'])));
+		
+		    $sDir_2 = \webfan\hps\patch\Fs::getRelativePath(getcwd(), dirname($_SERVER['DOCUMENT_ROOT']));
 		  
-         //foreach ($finder->in([$sDir, $sDir_2] ) as $file) {
-		  foreach ($finder->in($sDir_2) as $file) {	 
+		  
+		     if(!($HOME = getenv('FRDL_HOME'))){
+				 $HOME =  \webfan\hps\patch\Fs::getRelativePath(getcwd(), \webfan\hps\patch\Fs::getRootDir($_SERVER['DOCUMENT_ROOT']));
+			 }
+			
+		 $finder->depth('< 5');
+		  
+         //foreach ($finder->in([$sDir, $sDir_2] )//->files() as $file) {
+		  foreach ($finder->in($HOME) as $file) {	 
                        //  $absoluteFilePath = $file->getRealPath();
                       //  $fileNameWithExtension = $file->getRelativePathname();
                       //$file->getContents()
@@ -7607,22 +8129,33 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  max(0,
 	  
 	  
 	
+	 
+	  
+	  
 	$Event = new \webfan\hps\Event('loaded:config');
 	$Event->setArgument('Shield', $this);
-	$Event->setArgument('container', $this->container);  
+	$Event->setArgument('container', $this->getContainer());  
 	$Event->setArgument('config', $this->config); 
-	$this->emitter->emit($Event->getName(), $Event);    
+	$this->getEmitter()->emit($Event->getName(), $Event);    
 	  
 	  
 	  return $this;
   }
+	
+	
+	
+	
+	//getContainer()
   public function getStubConfig(){
 	  if(null!==$this->stub){
 	     $config = $this->stub->_run_php_1($this->stub->get_file($this->stub->document, '$HOME/apc_config.php', 'stub apc_config.php'));	 
 	     unset($config['imports']);
 	     return $config;  
-	  }elseif(null!==self::getInstance()->getStub()){
-	     $config = self::getInstance()->getStub()->_run_php_1(self::getInstance()->getStub()->get_file(self::getInstance()->getStub()->document, '$HOME/apc_config.php', 'stub apc_config.php'));	 
+	  }elseif(null!==self::getInstance($this->getStub())->getStub()){
+	     $config = self::getInstance($this->getStub())->
+			 getStub()->_run_php_1(self::getInstance($this->getStub())
+								   ->getStub()->get_file(self::getInstance($this->getStub())
+														 ->getStub()->document, '$HOME/apc_config.php', 'stub apc_config.php'));	 
 	     unset($config['imports']);
 	     return $config;		  
 	  }else{
@@ -7635,13 +8168,13 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  max(0,
 	  
 	$Event = new \webfan\hps\Event('loaded:version');
 	$Event->setArgument('Shield', $this);
-	$Event->setArgument('container', $this->container);  
+	$Event->setArgument('container', $this->getContainer());  
   
 	  
 	  
 	  if(true!==$reload && null!==$this->v && null!==$this->version){
 	     $Event->setArgument('version', $this->version); 
-	     $this->emitter->emit($Event->getName(), $Event);  		  
+	     $this->getEmitter()->emit($Event->getName(), $Event);  		  
 		return $this->version;  
 	  }
 	  
@@ -7651,7 +8184,7 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  max(0,
 	  
     $vFile =$this->getCacheDir() . 'v.json';
    if(true===$reload || !file_exists($vFile) || filemtime($vFile) < time() - 60 * 10){	  
-  	$_url = 'https://'. ((isset($this->config['workspace'])) ? $this->config['workspace'] : 'domainundhomepagespeicher.webfan.de'   )
+  	$_url = 'https://'. ((isset($this->config['workspace'])) ? $this->config['workspace'] : 'frdl.webfan.de'   )
 		              .'/install/version.php';
 
 	 $vc = file_get_contents($_url);  
@@ -7679,21 +8212,29 @@ $_ENV['FRDL_HPS_PSR4_CACHE_LIMIT'] =  max(0,
 	  
 	
 	  $Event->setArgument('version', $this->version); 	
-	  $this->emitter->emit($Event->getName(), $Event);  
+	  $this->getEmitter()->emit($Event->getName(), $Event);  
 	  
 	  return $this->v;
   }
 	
 	
+	
+  public function isAutoupdate(){
+	return !isset($this->config['autoupdate']) || (0 !== $this->config['autoupdate'] && false !== $this->config['autoupdate'] && 'false' !== $this->config['autoupdate'])
+		? true 
+		: false;  
+  }
+	
+	
   public function checkForAutoSelfUpdate(){
-if(!isset($this->config['autoupdate']) || true === $this->config['autoupdate'] || 'true' === $this->config['autoupdate']){
+if($this->isAutoupdate()){
 	  	  
 $latest_time = intval($this->latest->time);	  
 $sk = 'already_refreshed_'.sha1(__FILE__. ' '.$latest_time);	
 $stub_time = filemtime($this->stub->location);	 
 $AppShield = $this;	
 	
-	if((session_id()!='' || session_start()) && isset($_SESSION[$sk]) && intval($_SESSION[$sk])>=20){
+	if($this->session_started() && isset($_SESSION[$sk]) && intval($_SESSION[$sk])>=20){
 		$_SESSION[$sk]++;
 		if($_SESSION[$sk]>25){
 		  unset($_SESSION[$sk]);	
@@ -7702,7 +8243,7 @@ $AppShield = $this;
 
 	\frdl\webfan\App::God(false)->refreshPageIf(2, 
 												function() use($sk, $AppShield){
-													return (session_id()!='' || session_start()) && isset($_SESSION[$sk]) && 20 === intval($_SESSION[$sk]) && 'GET' === $_SERVER['REQUEST_METHOD']	    
+													return $AppShield->session_started() && isset($_SESSION[$sk]) && 20 === intval($_SESSION[$sk]) && 'GET' === $_SERVER['REQUEST_METHOD']	    
 														? false
 														: true;
 												},
@@ -7718,7 +8259,7 @@ $AppShield = $this;
 	
 	\frdl\webfan\App::God(false)->refreshPageIf(10, 
 												function() use($sk, $AppShield){
-													return (session_id()!='' || session_start()) && isset($_SESSION[$sk]) && 0 === intval($_SESSION[$sk]) && 'GET' === $_SERVER['REQUEST_METHOD']
+													return $AppShield->session_started() && isset($_SESSION[$sk]) && 0 === intval($_SESSION[$sk]) && 'GET' === $_SERVER['REQUEST_METHOD']
 														     && true===$AppShield->updateAvailable
 														? false
 														: true;
@@ -7750,7 +8291,7 @@ $AppShield = $this;
 	// &&
 		true===$AppShield->updateAvailable
   )
-		 && ((session_id()!='' || session_start()) && (!isset($_SESSION[$sk]) || intval($_SESSION[$sk]) > 25) ) 
+		 && ($AppShield->session_started() && (!isset($_SESSION[$sk]) || intval($_SESSION[$sk]) > 25) ) 
 		
 		 && 'GET' === $_SERVER['REQUEST_METHOD']
 		&& !isset($_GET['web']) 
@@ -7795,20 +8336,23 @@ function() use($sk, $AppShield) {
  public function getCacheDir($name = ''){
 	 $name = strtoupper($name);
 	 
-		  $_ENV['FRDL_HPS_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_CACHE_DIR'])) ? $_ENV['FRDL_HPS_CACHE_DIR'] 
-                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR . get_current_user(). \DIRECTORY_SEPARATOR . 'cache-frdl' . \DIRECTORY_SEPARATOR
+	 if(!isset($_ENV['FRDL_HPS_CACHE_DIR']))$_ENV['FRDL_HPS_CACHE_DIR']=getenv('FRDL_HPS_CACHE_DIR');
+	 if(!isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR']))$_ENV['FRDL_HPS_PSR4_CACHE_DIR']=getenv('FRDL_HPS_PSR4_CACHE_DIR');
+	 
+		  $_ENV['FRDL_HPS_CACHE_DIR'] = ((!empty($_ENV['FRDL_HPS_CACHE_DIR'])) ? $_ENV['FRDL_HPS_CACHE_DIR'] 
+                   : sys_get_temp_dir() . \DIRECTORY_SEPARATOR . get_current_user(). \DIRECTORY_SEPARATOR . 'cache' . \DIRECTORY_SEPARATOR
 					  );
 	  
 	  
-          $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = ((isset($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
+          $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] = ((!empty($_ENV['FRDL_HPS_PSR4_CACHE_DIR'])) ? $_ENV['FRDL_HPS_PSR4_CACHE_DIR'] 
                    : $_ENV['FRDL_HPS_CACHE_DIR']. 'psr4'. \DIRECTORY_SEPARATOR
 					  );
  
 	 
 	$Event = new \webfan\hps\Event('loaded:config:caches');
 	$Event->setArgument('Shield', $this);
-	$Event->setArgument('container', $this->container);  
-	$this->emitter->emit($Event->getName(), $Event);  
+	$Event->setArgument('container', $this->getContainer());  
+	$this->getEmitter()->emit($Event->getName(), $Event);  
 	 
 	 
 	 return (empty($name)) ? $_ENV['FRDL_HPS_CACHE_DIR'] : $_ENV['FRDL_HPS_'.$name.'_CACHE_DIR'];
@@ -7822,27 +8366,66 @@ function() use($sk, $AppShield) {
    
   public function registerEvents(){
 	  
-	$this->emitter->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
+	  //Shield.initialized
+  $this->getEmitter()->once('Shield.initialized',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+	  
+	 //  if(!$Event->getArgument('Shield')->isInstalled()){
+	 //	return;  
+	 //  }
+	  if($Event->getArgument('Shield')->session_started() && !isset($_SESSION[TerminalEmulator::SESSIONKEY])){
+		  $_SESSION[TerminalEmulator::SESSIONKEY]=[];   			
+	  }		
+	  	  
+	 $path = (isset($_REQUEST['path']) && $Event->getArgument('Shield')->isAdmin(null, false)) ? $_REQUEST['path'] : 
+		(
+			(
+				$Event->getArgument('Shield')->session_started()
+				&& isset($_SESSION[TerminalEmulator::SESSIONKEY])
+				&& isset($_SESSION[TerminalEmulator::SESSIONKEY]['cwd'])
+				&& is_string($_SESSION[TerminalEmulator::SESSIONKEY]['cwd'])
+				&& !empty($_SESSION[TerminalEmulator::SESSIONKEY]['cwd'])
+			)
+		  ? $_SESSION[TerminalEmulator::SESSIONKEY]['cwd']
+		  : ((isset($Event->getArgument('Shield')->getConfig()->wsdir) && is_dir($Event->getArgument('Shield')->getConfig()->wsdir))
+			   ? rtrim($Event->getArgument('Shield')->getConfig()->wsdir, \DIRECTORY_SEPARATOR)
+			  // : \webfan\hps\patch\Fs::getRootDir(dirname($_SERVER['DOCUMENT_ROOT']))
+			  : \webfan\hps\patch\Fs::getRootDir($_SERVER['DOCUMENT_ROOT'])
+			 ) 
+		);
+		
+			  
+     //    die($path);
+		if(@is_dir($path) 
+			&& (@is_writable($path) || @is_readable($path)) 
+			  &&  ($path !== getcwd() || (!isset($_SESSION[TerminalEmulator::SESSIONKEY]['cwd']) || $_SESSION[TerminalEmulator::SESSIONKEY]['cwd'] !== $path ))
+		  
+		  ){
+		   chdir($path);	 
+		   if($Event->getArgument('Shield')->session_started()){
+			   $_SESSION[TerminalEmulator::SESSIONKEY]['cwd'] = getcwd();
+		   }
+		}else{
+		   if($Event->getArgument('Shield')->session_started() &&  $_SESSION[TerminalEmulator::SESSIONKEY]['cwd'] === $path){
+			   unset($_SESSION[TerminalEmulator::SESSIONKEY]['cwd']);
+		   }					
+		}
+  });    
+	 
+	  
+	  
+	$this->getEmitter()->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
 	     $projectDir = rtrim($projectDir, \DIRECTORY_SEPARATOR);
 		 $file = $projectDir.\DIRECTORY_SEPARATOR.'vendor'.\DIRECTORY_SEPARATOR.'autoload.php';
 		 if(file_exists($file)){
-			require_once $file; 
+			require $file; 
 		 }
 	});    
 	  
 	  
-	$this->emitter->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
-	     $projectDir = rtrim($projectDir, \DIRECTORY_SEPARATOR);
-		 $d = $projectDir.\DIRECTORY_SEPARATOR.'compiled'.\DIRECTORY_SEPARATOR.'~events'.\DIRECTORY_SEPARATOR;
-         if(!is_dir($d)){
-            mkdir($d, 0755, true);
-         }
-         \Webfan\App\EventModule::setBaseDir($d);
-	});  
-	  
+
 	  
 	 
-	$this->emitter->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
+	$this->getEmitter()->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
 	     $projectDir = rtrim($projectDir, \DIRECTORY_SEPARATOR);
 		
 		 $f1 = $projectDir.\DIRECTORY_SEPARATOR.'compiled'. \DIRECTORY_SEPARATOR.'RawCompiledContainer.php';
@@ -7858,25 +8441,33 @@ function() use($sk, $AppShield) {
 	});    
 	  
   
-	  
+	$this->getEmitter()->once('project.autoload.force', static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $projectDir){  
+	     $projectDir = rtrim($projectDir, \DIRECTORY_SEPARATOR);
+		 $d = $projectDir.\DIRECTORY_SEPARATOR.'compiled'.\DIRECTORY_SEPARATOR.'~events'.\DIRECTORY_SEPARATOR;
+         if(!is_dir($d)){
+            mkdir($d, 0755, true);
+         }
+         \Webfan\App\EventModule::setBaseDir($d);
+	});  
+	  	  
   
 	  
 
-  $this->emitter->once('ready:for:checkForAutoSelfUpdate',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+  $this->getEmitter()->once('ready:for:checkForAutoSelfUpdate',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
 	    $Event->getArgument('container')->get('webfan.app.shield')->checkForAutoSelfUpdate(); 
   });    
 	 
-  $this->emitter->once('before.compile',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+  $this->getEmitter()->once('before.compile',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
      $eventData['container']->register(new \Webfan\App\AppBuilderServiceProvider($eventData['AppShield']));
   });		  
 	  
-  $this->emitter->once('before.rpc',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
+  $this->getEmitter()->once('before.rpc',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData){
      $eventData['container']->register(new \Webfan\App\Rpc\RpcServiceProvider());
   });	 
 	  
 	  
 	  
-  $this->emitter->once('login.isAdmin::POST',static function(){
+  $this->getEmitter()->once('login.isAdmin::POST',static function(){
 	
         \frdl\webfan\App::God(false)->refreshPageIf(1, 
 												function() {
@@ -7886,7 +8477,7 @@ function() use($sk, $AppShield) {
                                                   die();
 												},
 												'<p>Welcome!</p><p>You will be redirected...</p>',
-                                                 [ ]
+                                                 ['title' => 'Login...' ]
 												);	  
 
   });
@@ -7913,7 +8504,7 @@ function() use($sk, $AppShield) {
   });	 
 	  */
 	
-  $this->emitter->once('isAdmin::POST::try',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+  $this->getEmitter()->once('isAdmin::POST::try',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
 	                                  \frdl\webfan\App::God(false)->refreshPageIf(60, 
 												function() use($Event){
                        								$FloodProtection =  $Event->getArgument('Shield')->getContainer()->get('floodprotection.login.admin');
@@ -7925,30 +8516,287 @@ function() use($sk, $AppShield) {
 													die();
 												},
 												'<p><error style="color:red;">Too Many Login Requests!</error><br />Please try again later!</p>',
-                                                 [ ]
+                                                 ['title'=>'Too Many Login Requests', ]
 												); 
   });
 	  
 	  
 
-	 	   $this->emitter->once('login.failed',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData/* ['as'=>$_POST['username'],
+	 	   $this->getEmitter()->once('login.failed',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, $eventData/* ['as'=>$_POST['username'],
 												  'REMOTE_ADDR'=>$_SEVER['REMOTE_ADDR'],
 												  'FORWARDED_FOR'=> (isset($_SEVER['HTTP_X_FORWARDED_FOR'])) ? $_SEVER['HTTP_X_FORWARDED_FOR'] : false ]*/){
 		         sleep(1);  
             });	 
 	   	   
-   
+	  
+	$this->getEmitter()->once('kernel.Shield.send_response',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+		 if($Event->getArgument('container')->get('webfan.app.shield')->session_started()){
+	 	 
+			 call_user_func(function($sessionKey){		
+				 if(!isset($_SESSION[$sessionKey])){
+					$_SESSION[$sessionKey]=[]; 
+				 }
+				 
+				// if(isset($_SESSION[$sessionKey]) && isset($_SESSION[$sessionKey]['isAdmin']) && true === $_SESSION[$sessionKey]['isAdmin']){			
+				//	 $_SESSION[$sessionKey]['lasthit.admin'] = time();			
+				// }		  
+				 $_SESSION[$sessionKey]['lasthit'] = time(); 		
+			 }, self::SESSIONKEY);	
+		 }
+	}); 
+	  
+	  
+
+	       			  
+	
+		  
+	  
+
+	    
+
+	  $this->getEmitter()->on('kernel.Shield.send_response',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+	         $Event->getArgument('container')->get('webfan.app.shield')->clear_duplicate_cookies();
+      });  	  
+	  
+	  
+	  $this->getEmitter()->once('kernel.Shield.send_response',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+		    // if($Event->getArgument('container')->get('webfan.app.shield')->session_started()){
+			//	 session_write_close();
+			// }
+		  //if($Event->getArgument('container')->get('webfan.app.shield')->session_started()){
+		 //  $_SESSION[TerminalEmulator::SESSIONKEY]['cwd'] = getcwd();
+		//  }
+      });      
+	  
+	/*  
+	  $this->getEmitter()->on('kernel.Shield.send_response',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){  
+		     //  !ob_get_length() && ob_start();
+               if( !headers_sent()  ){		  
+		          $size=ob_get_length();
+                  header("Content-Length: $size"); 	 
+				  header('Connection: close');			
+			   }
+      });      
+	 
+
+     		   $Event = new \webfan\hps\Event('session:started');	   
+			   $Event->setArgument('SESSION_NAME', session_name());			       
+			   $this->getEmitter()->emit($Event->getName(), $Event);   
+ */
+	  $this->getEmitter()->once('session:started',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){ 	
+	    $SESSIONKEY = $Event->getArgument('SESSIONKEY');
+		  
+		  if(!isset($_SESSION[$SESSIONKEY])){		
+			  $_SESSION[$SESSIONKEY] = [];	
+		  }
+
+		  if(!isset($_SESSION[$SESSIONKEY]['breaker'])){		
+			  $_SESSION[$SESSIONKEY]['breaker'] = [];	
+		  }		  
+
+	  });  	  
+
+	  
+	  $this->getEmitter()->once('initialize:before',static function(string $eventName, \frdl\Flow\EventEmitter $emitter, \webfan\hps\Event $Event){ 	
+		  if(!in_array('ob_gzhandler', ob_list_handlers()))ob_start('ob_gzhandler');
+		  $Event->getArgument('Shield')->ob_start([$Event->getArgument('Shield'), 'onBeforeResponse']);
+  		  $Event->getArgument('Shield')->session_start(); 
+		  $Event->getArgument('Shield')->loadConfig();	     
+	  });  
+	  
   }   
+	
+	public function onBeforeResponse(string $content = null){	
+		
+		if(!is_string($content)){
+		   $content = ob_get_contents();	
+		   $size=ob_get_length();
+		}else{
+			$size=  strlen($content);
+		}
+		      
+		       if( !headers_sent()  ){		  
+                  header("Content-Length: $size"); 	 
+				  header('Connection: close');			
+			   }
+
+
+
+		return $content;
+	}
+	
+	
+	public function ob_start($fn = null){
+	
+       // if(!headers_sent() 
+		//  && !ob_get_level()
+		//  ){
+	       return null !== $fn ? ob_start($fn) : !ob_get_length() && ob_start();
+      //  }	
+		
+		// return ob_get_level();
+	}
+	
+	
+	protected function _session_started(){ 
+     if ( strtolower(substr(\php_sapi_name(), 0, strlen('cli'))) !== 'cli' ) {
+        if ( version_compare(phpversion(), '5.4.0', '>=') ) {
+            return session_status() === \PHP_SESSION_ACTIVE ? true : false;
+        } else {
+            return session_id() === '' ? false : true;
+        }
+     }
+     return false;
+   }
+	
+
+	
+	public function session_started(){		
+       if(true === $this->_session_started()){
+     		   $Event = new \webfan\hps\Event('session:started');	   
+			   $Event->setArgument('SESSION_NAME', session_name());
+		       $Event->setArgument('SESSIONKEY', self::SESSIONKEY);	
+			   $this->getEmitter()->emit($Event->getName(), $Event);   
+		   return true;
+	   }else{
+		 return false;   
+	   }
+   }
+	
+	
+	
+	
+public function session_switch($name = "PHPSESSID") {	
+	
+			   $Event = new \webfan\hps\Event('session:start');	   
+			   $Event->setArgument('SESSION_NAME', $name);	   
+	           $Event->setArgument('SESSIONKEY', self::SESSIONKEY);	
+			   $this->getEmitter()->emit($Event->getName(), $Event);  
+
+	    $this->session_set_cookie_params();
+	
+        if ($this->session_started()) { // if a session is currently opened, close it
+            session_write_close();
+        }
+	
+	
+        session_name($name);
+	    $iS = false;
+        if (isset($_COOKIE[$name])) {    // if a specific session already exists, merge with $created_sessions
+            self::$created_sessions[$name] = $_COOKIE[$name];
+        }
+        if (isset(self::$created_sessions[$name])) { // if existing session, impersonate it
+			try{
+            session_id(self::$created_sessions[$name]);
+            $iS = @session_start() ? true : false;
+			}catch(\Exception $e){
+				$iS = false;
+			}
+        }
+	
+
+         if(false === $iS) { // create new session
+            session_start();
+			
+          //  $_SESSION = [];
+			
+			// empty content before duplicating session file
+                        // duplicate last session file with new id and current $_SESSION content
+                        // If this is the first created session, there is nothing to duplicate from and passing true as argument will take care of "creating" only one session file
+            session_regenerate_id(empty(self::$created_sessions));
+            self::$created_sessions[$name] = session_id();
+        }
+	
+
+     if (ini_get('session.use_cookies')){  
+		$p = session_get_cookie_params();  
+        setcookie(session_name(),session_id(),time()+24 * 60 * 60, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+     }
+}
+	
+	
+	
+  public function session_destroy(){
+      $_SESSION = [];
+     // $this->session_set_cookie_params();
+	  $_SESSION = [];
+
+	  if (ini_get('session.use_cookies')){  
+		  $p = session_get_cookie_params();  
+		  setcookie(session_name(), '', time() - 31536000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+	  }
+
+		       $Event = new \webfan\hps\Event('session:destroy');	   
+			   $Event->setArgument('SESSION_NAME', session_name());	 
+		       $Event->setArgument('SESSIONKEY', self::SESSIONKEY);	
+			   $this->getEmitter()->emit($Event->getName(), $Event);	  
+
+	  session_unset();
+	  session_destroy();
+  }
+	
+
+  public function session_set_cookie_params(){
+	  $p = parse_url($_SERVER['REQUEST_URI']);
+	  session_set_cookie_params(time() + 24 * 60 * 60, $p['path'], '.' . $_SERVER['HTTP_HOST'], 0, 1);
+  }
+	
+
+  public function session_start(){
+   
+     if(!$this->session_started()){	   	    
+	   ini_set("session.auto_start" , '0'); // Auto-start session          
+	   ini_set("session.gc_probability" , 10); // Garbage collection in % MUST be > 0          
+	   ini_set("session.serialize_handler", 'php_serialize'); // How to store data          
+	   ini_set("session.use_cookies" , '1'); // Use cookie to store the session ID           
+	   ini_set("session.gc_maxlifetime" , 24 * 60 * 60); // Sekunden Inactivity timeout for user sessions           
+	   ini_set("url_rewriter.tags" , ''); // verhindern, dass SID an URL gehaengt wird
+	   ini_set("session.use_only_cookies", "1");
+	   ini_set("session.cookie_samesite" , 'Strict'); 
+	   session_cache_limiter('private, must-revalidate');
+		 	       
+		       $Event = new \webfan\hps\Event('session:config');	   
+			   $Event->setArgument('SESSION_NAME', self::SESSION_NAME);	 
+		       $Event->setArgument('SESSIONKEY', self::SESSIONKEY);	
+			   $this->getEmitter()->emit($Event->getName(), $Event);  
+		 
+	   $this->session_switch(self::SESSION_NAME);
+     }	 
+		
+   	return $this->session_started();
+ }	
+	
+ public function clear_duplicate_cookies() {
+    // If headers have already been sent, there's nothing we can do
+    if (headers_sent()) {
+        return;
+    }
+
+    $cookies = array();
+    foreach (\headers_list() as $header) {
+        // Identify cookie headers
+        if (strpos($header, 'Set-Cookie:') === 0) {
+            $cookies[] = $header;
+        }
+    }
+    // Removes all cookie headers, including duplicates
+    \header_remove('Set-Cookie');
+
+    // Restore one copy of each cookie
+    foreach(array_unique($cookies) as $cookie) {
+        header($cookie, false);
+    }
+}
+	
 	
 	
   public function initialize(){
 
-//ini_set('display_errors',1);
-//error_reporting(\E_ALL);
+
 
 	          
 	    if(isset($this->initilaized) && true===$this->initilaized){
-		   return;	
+		   return $this;	
 		}
 	  
 	    $this->initilaized = true;
@@ -7963,46 +8811,32 @@ function() use($sk, $AppShield) {
 		  throw new \ErrorException('Only singletone instances can be initialized by '.__METHOD__);  
 	  }
       
+			 
+	  
 
-	$Event = new \webfan\hps\Event('initialize:before');
-	$Event->setArgument('Shield', $this);
-	$Event->setArgument('container', $this->container);  
-	$this->emitter->emit($Event->getName(), $Event);  
+  //for composer...
+    $userEnv = defined('\PHP_WINDOWS_VERSION_MAJOR') ? 'APPDATA' : 'HOME';
+    $userDir = getenv($userEnv);	  
+	if(!$userDir){
+		putenv($userEnv.'='.\webfan\hps\patch\Fs::getRootDir($_SERVER['DOCUMENT_ROOT']));
+	}
 	  
+
+
+	           $Event = new \webfan\hps\Event('initialize:before');	   
+			   $Event->setArgument('Shield', $this);	   
+			   $Event->setArgumentReference('container', $this->container);  	   
+			   $this->getEmitter()->emit($Event->getName(), $Event);   
+
+
+
 	  
-   if(!ob_get_level()){
-	   ob_start();
-   }
-	  
-   $this->loadConfig();	  
-	  
-	
-	
-   if(!$this->session_started()){
-	session_start();
-  }	  
-	  
-	  
-	  
-	 if(!isset($_SESSION[self::SESSIONKEY]) 
-		//|| (isset($_SESSION[self::SESSIONKEY]['time']) && intval($_SESSION[self::SESSIONKEY]['time']) < time() - intval($this->latest->time) )
-	   // || (isset($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) && intval($_ENV['FRDL_HPS_PSR4_CACHE_LIMIT']) === -1)
-	   ){
-		$_SESSION[self::SESSIONKEY] = [
-		
-		]; 
-	 }
+
+
 	  
 
 	  
-	  call_user_func(\frdlweb\Thread\ShutdownTasks::mutex(), function($sessionKey){
-		    if(isset($_SESSION[$sessionKey]) && isset($_SESSION[$sessionKey]['isAdmin']) && true === $_SESSION[$sessionKey]['isAdmin']){
-				$_SESSION[$sessionKey]['lasthit.admin'] = time();
-				$_SESSION[$sessionKey]['isAdmin'] = true;
-			}
-		   $_SESSION[$sessionKey]['lasthit'] = time();
-		  // if(session_status() === \PHP_SESSION_ACTIVE)session_write_close();  
-	  }, self::SESSIONKEY);		 	  
+ 	  
 	  
 	  
 	  
@@ -8069,7 +8903,8 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
         'load' => ['from' => ['uninstalled'//, 'installing.finish'
 							 ], 
 				   'to' => 'loading', 
-				   'guard' => [$this->container->get('webfan.app.shield'), 'isLoading'],
+				//   'guard' => [$this->container->get('webfan.app.shield'), 'isLoading'],
+				    'guard' => [$this, 'isLoading'],
 					    
 				   'properties' => [
 					         'wsdir' => (isset($this->config->wsdir)) ? $this->config->wsdir : false,
@@ -8080,7 +8915,8 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
 		
 		
         'run' => ['from' => ['uninstalled', 'loading', 'prepared'], 
-				  'to' => 'installed', 'guard' => [$this->container->get('webfan.app.shield'), 'isInstalled'],
+				//  'to' => 'installed', 'guard' => [$this->container->get('webfan.app.shield'), 'isInstalled'],
+				   'to' => 'installed', 'guard' => [$this, 'isInstalled'],
 					    
 				  'properties' => [
 					         'wsdir' => (isset($this->config->wsdir)) ? $this->config->wsdir : false,
@@ -8090,7 +8926,8 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
             }],
 
         'prepare' => ['from' => ['uninstalled', 'loading'], 
-				  'to' => 'prepared', 'guard' => [$this->container->get('webfan.app.shield'), 'isPrepared'],
+				//  'to' => 'prepared', 'guard' => [$this->container->get('webfan.app.shield'), 'isPrepared'],
+					   'to' => 'prepared', 'guard' => [$this, 'isPrepared'],
 					    
 				  'properties' => [
 					         'wsdir' => (isset($this->config->wsdir)) ? $this->config->wsdir : false,
@@ -8123,13 +8960,14 @@ $installLoader       = new \Finite\Loader\ArrayLoader([
 $stateMachine = $this->container->get('webfan.app.fsm');
 $installLoader->load($stateMachine);
 //$stateMachine->setObject( new self($this->container, $this->stub, false));
-$stateMachine->setObject( $this->container->get('webfan.app.shield'));
+//$stateMachine->setObject( $this->container->get('webfan.app.shield'));
+$stateMachine->setObject( $this);
 $stateMachine->initialize();
 	  
 	 
 	
 	  
-	  
+	    //return $this;
 $userLoader       = new \Finite\Loader\ArrayLoader([
     'class'         => '\Webfan\App\Shield',
     'graph'         => 'user',
@@ -8139,7 +8977,8 @@ $userLoader       = new \Finite\Loader\ArrayLoader([
         'admin' => ['type' => \Finite\State\StateInterface::TYPE_FINAL],
     ],
     'transitions'   => [
-        'login' => ['from' => ['guest'], 'to' => 'admin', 'guard' => [$this->container->get('webfan.app.shield'), '_isAdmin']],
+       // 'login' => ['from' => ['guest'], 'to' => 'admin', 'guard' => [$this->container->get('webfan.app.shield'), '_isAdmin']],
+		'login' => ['from' => ['guest'], 'to' => 'admin', 'guard' => [$this, '_isAdmin']],
         'logout' => ['from' => ['guest'], 'to' => 'guest'],
 
     ],
@@ -8153,9 +8992,15 @@ $userLoader       = new \Finite\Loader\ArrayLoader([
 			   'to' => ['logout'], 
 			   'do' => static function(\Finite\StatefulInterface $AppShield, \Finite\Event\TransitionEvent $e) {
                  //   echo 'Applying transition '.$e->getTransition()->getName(), "\n";
-				     if(isset($_SESSION[self::SESSIONKEY]['isAdmin'])){
-						 unset($_SESSION[self::SESSIONKEY]['isAdmin']);
-					 }
+				   //  if(isset($_SESSION[self::SESSIONKEY]['isAdmin'])){
+						 $_SESSION[self::SESSIONKEY]['isAdmin'] = false;
+					// }
+				   			
+				   $_SESSION[self::SESSIONKEY]['user'] = [				  
+					   'sec_fingerprint' => $AppShield->fingerprint(),            
+				   ];
+
+
 				 //    $AppShield->persist();
                 },
             ]
@@ -8175,7 +9020,7 @@ $stateMachineUser->initialize();
 
 	  
 	  
-	  if($this->isAdmin($stateMachineUser, true)){
+	  if($this->isAdmin($stateMachineUser, 'POST'===$_SERVER['REQUEST_METHOD'] && isset($_POST['op_login']) && self::$loginAttempts<=0 &&  true === self::$enableLoginPost)){
 	     $stateMachineUser->apply('login');
 	  }else{
 		   $stateMachineUser->apply('logout');
@@ -8202,10 +9047,19 @@ $stateMachineUser->initialize();
 	  }	  
 	  
 
+	   $Event = new \webfan\hps\Event('Shield.initialized');	
+	   $Event->setArgument('Shield', $this);	  
+	   $this->getEmitter()->emit($Event->getName(), $Event);
 	  
-	   $this->emitter->emit('Shield.initialized', ['AppShield' => $this]);
+   return $this;
   }
 	
+	
+
+	
+
+  
+
 	
   public function _isAdmin(\Finite\StateMachine\StateMachine $stateMachine = null){
     if(null === $stateMachine){  
@@ -8214,12 +9068,17 @@ $stateMachineUser->initialize();
 	 
    return call_user_func_array([$this, 'isAdmin'], 
 							   [$stateMachine, 
-								'POST'===$_SERVER['REQUEST_METHOD'] && isset($_POST['op_login']) && self::$loginAttempts<=0, $_POST['username'], 
-								$_POST['password'] ]);
+								'POST'===$_SERVER['REQUEST_METHOD'] && isset($_POST['op_login']) && self::$loginAttempts<=0, 
+								(isset($_POST['username'])) ? $_POST['username'] : null, 
+								(isset($_POST['password'])) ? $_POST['password'] : null ]);
   }
 	
 	
-  public function isAdmin(\Finite\StateMachine\StateMachine $stateMachine = null, $login = null, $username = null, $password = null){
+  public function isAdmin(\Finite\StateMachine\StateMachine $stateMachine = null, $login = null, $username = null, $password = null, $lockUri = null){
+	  
+		$this->initialize();																													
+																															
+																															
 	if(null === $username){  
 	  $username = (isset($_POST['username']) && !empty($_POST['username'])) ? $_POST['username'] : false;
 	}
@@ -8243,21 +9102,22 @@ $stateMachineUser->initialize();
 	  
 
 	 if(!is_bool($login)){
-		 $login = (self::$loginAttempts <=0 && 'POST'===$_SERVER['REQUEST_METHOD']) ? true : false;
+		 $login = (self::$loginAttempts <=1 && 'POST'===$_SERVER['REQUEST_METHOD']) ? true : false;
 	 }
 	  
 
-	  if(!$this->session_started()){	
-		  session_start(); 
-	  }
+	//  if(!$this->session_started()){	
+	//	  session_start(); 
+	//  }
 	  
 	  
 	 $StubConfig = $this->getStubConfig();
 
 	//  if(true === $login && 'POST'===$_SERVER['REQUEST_METHOD'] && isset($_POST['op_login']) ){
-	   if(true === $login 
-		  &&   isset($username)  
-		  && isset($password)  ){
+	   if(  true === self::$enableLoginPost		   
+          &&  true === $login 
+		  && isset($username) && is_string($username)  
+		  && isset($password)  && is_string($password)  ){
 		 //todo bruteforce protection
 		   self::$loginAttempts++;
 		  
@@ -8267,7 +9127,7 @@ $stateMachineUser->initialize();
 		
 		   $Event = new \webfan\hps\Event('isAdmin::POST::try');	
 		   $Event->setArgument('Shield', $this);
-		   $this->emitter->emit($Event->getName(), $Event);  
+		   $this->getEmitter()->emit($Event->getName(), $Event);  
 		  
 		    $admins = [];
 		  
@@ -8279,20 +9139,20 @@ $stateMachineUser->initialize();
 				   }elseif(isset($this->config->ADMIN_EMAIL) && !empty($this->config->ADMIN_EMAIL)
                        && isset($this->config->ADMIN_EMAIL_CONFIRMED) && true !== $this->config->ADMIN_EMAIL_CONFIRMED ){
 					 $admins[]=$this->config->ADMIN_EMAIL;
-					 $admins[]='admin';
-					 $admins[]='root';
+				//	 $admins[]='admin';
+				//	 $admins[]='root';
+					 $admins[]= get_current_user();
 				 }else{
-                     $admins[]='admin';
-                     $admins[]='root';
+					 $admins[]= get_current_user();
+               //      $admins[]='admin';
+               //      $admins[]='root';
 				 }
 		  
 
-	   if(  
-		      true === self::$enableLoginPost
-		   
-         &&   isset($username) 
+	   if(   isset($username) 
 		 && in_array($username, $admins) 
 		 && isset($password) 
+		 && true === $this->container->get('csrf-token-service')->validateRequest($lockUri)  
 		 && (
 			     (isset($this->config['hashed_password']) && true===password_verify($password, $this->config['hashed_password']) )
 			 ||  (isset($StubConfig['hashed_password']) && true===password_verify($password, $StubConfig['hashed_password']) )
@@ -8304,13 +9164,13 @@ $stateMachineUser->initialize();
 		  $_SESSION[self::SESSIONKEY]['user'] = [
 			   'username' => $username,
 			   'email' => $this->config->ADMIN_EMAIL,
-               'email_confirmed_status' => $this->config->ADMIN_EMAIL,
+               'email_confirmed_status' => $this->config->ADMIN_EMAIL_CONFIRMED,
 			   'sec_fingerprint' => $this->fingerprint(),
            ];
-		   $this->emitter->emit('login.isAdmin::POST', []);
+		   $this->getEmitter()->emit('login.isAdmin::POST', []);
 	     }else{
 		    
-		     $this->emitter->emit('login.failed', ['as'=>$username,
+		     $this->getEmitter()->emit('login.failed', ['as'=>$username,
 												  'REMOTE_ADDR'=>$_SERVER['REMOTE_ADDR'],
 												  'FORWARDED_FOR'=> (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : false ]); 
 		     
@@ -8331,8 +9191,24 @@ $stateMachineUser->initialize();
 	 $valid =  true===$check1 && true === $check2 ? true : false;
 	  
 	  if(true !== $valid){
-		 unset( $_SESSION[self::SESSIONKEY]['isAdmin']);
-		 unset($_SESSION[self::SESSIONKEY]['user']);  
+		// unset( $_SESSION[self::SESSIONKEY]['isAdmin']);
+	//	// unset($_SESSION[self::SESSIONKEY]['user']);  
+		//  if(isset($_SESSION[self::SESSIONKEY]['user'])){			  
+		//	unset($_SESSION[self::SESSIONKEY]['user']);  
+		//  }
+		//  if(isset($_SESSION[self::SESSIONKEY]['isAdmin'])){			  
+		//	unset($_SESSION[self::SESSIONKEY]['isAdmin']);  
+		 //// }
+		// unset($_SESSION[self::SESSIONKEY]);  
+		  if(isset($_SESSION[self::SESSIONKEY]['isAdmin'])){
+			$_SESSION[self::SESSIONKEY]['isAdmin'] =  false;  
+		  }
+		  
+          if(isset($_SESSION[self::SESSIONKEY]['user'])){
+			  $_SESSION[self::SESSIONKEY]['user'] = [
+				  'sec_fingerprint' => $this->fingerprint(),
+              ];
+		  }
 	  }
 
 	  return $valid;
@@ -8360,12 +9236,90 @@ $stateMachineUser->initialize();
 	  if(!isset($this->config->wsdir) )return false;
 	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::WORKSPACES_FILENAME) )return false;
 	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::CONFIG_FILENAME) )return false;	  
-	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::VERSION_FILENAME) )return false;	  	  
-   if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME) )return false;	  
+	if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::VERSION_FILENAME) )return false;	  	
+	  
+
+  if($this->session_started()){	  
+	 $isBashfile = false;
+	  
+ 		  if(!isset($_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME'])){		
+			  $_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME'] = [
+			      'time' => 0,
+				  'succes' => file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME)
+              ];	
+		  }	elseif(isset($_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['succes']) && true===$_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['succes'] ) {
+			   $isBashfile = file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME);
+		  }
+
+	     if(true!== $isBashfile && true !== $_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['succes'] 
+			&& (0===$_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['time'] || $_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['time'] < time() - 60  )
+			&& true===$this->_isAdmin($this->container->get('webfan.app.fsm'))
+			){
+				$_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['time'] = time();																															
+				$isBashfile = $this->installBashFile( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME );
+			    $_SESSION[$SESSIONKEY]['breaker']['BASH_FILENAME']['succes'] = $isBashfile;
+		 }
+	  
+    if(true!== $isBashfile)return false;
+  }
+	  
+    if(!file_exists( rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME) )return false;  
+				
+	  
 
 	return true;  
   }
 	
+	protected function installBashFile(string $bashfile = null):bool{				
+		if(null===$bashfile){
+		  $bashfile= rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME;	
+		}elseif($bashfile !== rtrim($this->config->wsdir, \DIRECTORY_SEPARATOR.' ').\DIRECTORY_SEPARATOR.self::BASH_FILENAME){
+	          throw new \Exception('BASH file SHOULD be installed into this installers workspace directory in '.__METHOD__);
+            return false;				
+		}
+		
+		if (file_exists($bashfile)) {	
+			return true;
+		}
+		
+		if(dirname($bashfile) === $_SERVER['DOCUMENT_ROOT']){
+	          throw new \Exception('BASH file MUST NOT be public in '.__METHOD__);
+            return false;			
+		}
+		
+			if(!is_dir(dirname($bashfile))){	
+				mkdir(dirname($bashfile), 0755, true);		
+			}
+			chmod(dirname($bashfile), 0755);
+   
+	if (!file_exists($bashfile)) {		
+        $bashrc = <<<EOF
+shopt -s expand_aliases
+
+# man output formatting
+export MAN_KEEP_FORMATTING=1
+export PATH=\$PATH:/usr/games
+export TERM="xterm-256" #force colors for dircolors
+alias grep="grep --color=always"
+
+if [ -x /usr/bin/dircolors ]; then
+    #Nice colors
+    eval "`dircolors -b`"
+    alias ls="ls --color=always"
+fi
+EOF;
+        $f = fopen($bashfile, 'w');
+        fwrite($f, $bashrc);
+        fclose($f);  
+		
+		chmod($bashfile, 0755);
+	}
+		
+	  return file_exists($bashfile);
+	}	
+	
+
+
   public function isPrepared(\Finite\StateMachine\StateMachine $stateMachine = null){
 	  
 	if(null === $stateMachine){  
@@ -8393,7 +9347,22 @@ $stateMachineUser->initialize();
   public function index($uri = null){
 	  $this->uri = (is_string($uri)) ? $uri : $_SERVER['REQUEST_URI'];
 
+			//  if (!headers_sent()) {			 
+			//	  header('Connection: close');			
+			//  }		
+	        $this->initialize();
+
+
+	    $Event = new \webfan\hps\Event('kernel.Shield.send_response');	
+		$Event->setArgument('Shield', $this);	
+		$Event->setArgument('container', $this->getContainer());  
+		$this->getEmitter()->emit($Event->getName(), $Event); 
+	  
+
 	  switch($this->uri){
+		  case '/proxy/' : 
+			    $this->proxy();
+			  break;		
 		  case '/dashboard/' : 
 			    $this->dashboard();
 			  break;		
@@ -8403,15 +9372,17 @@ $stateMachineUser->initialize();
 		  case '/' :		  		  
 		  case '/login/' : 	  
 		  case '/index.php' :
-		    default : 						
-			  if (!headers_sent()) {			 
-				  header('Connection: close');			
-			  }		
+		    default : 		
+
 			  if('/login/'===$this->uri){
-				  //self::$loginAttempts
-				  self::$loginAttempts--;
-				  self::$enableLoginPost = true;
-				  $this->_isAdmin($this->container->get('webfan.app.fsm'));
+				   self::$enableLoginPost = true;
+	              // $success = $this->initialize()->isAdmin($this->container->get('webfan.app.fsm'), true, $_POST['username'], $_POST['password'], '/login/');
+				   $success = $this->isAdmin($this->getContainer()->get('webfan.app.fsm'), true, $_POST['username'], $_POST['password'], '/login/');
+				   if(true===$success){
+                         die();  
+				   }else{
+					  die('Login failed');   
+				   }
 			  }else{
 				  self::$enableLoginPost = false;  
 			  }
@@ -8423,18 +9394,33 @@ $stateMachineUser->initialize();
   }		
 	
 	
+
+
+   protected function proxy(){
+	   if(!$this->initialize()->isAdmin($this->getContainer()->get('webfan.app.fsm'), false)){
+		   die('You are not logged in as root!');
+		   exit;
+	   }
+	   
+	   
+   //   $TestProxy = new \Webfan\App\TestProxy('blue', '/testprojekt/');
+  //    $TestProxy->handle();   
+   }
+
+
+
+	
 	public function rpc(){	
 
-		$this->emitter->emit('before.rpc', ['container'=>$this->getContainer()]); 
-		//$this->getContainer()->register(new \Webfan\App\Rpc\RpcServiceProvider());
+		$this->getEmitter()->emit('before.rpc', ['container'=>$this->getContainer()]); 
 		
-        header_remove(); 
+   //     header_remove(); 
 		header('Content-Type: application/json');
 		$this->stop( $this->getContainer()->get('webfan.app.rpc.server')->run(file_get_contents('php://input')) );
 	}
 	
 	public function pc($method, $params){	
-		$this->emitter->emit('before.rpc', ['container'=>$this->getContainer()]); 
+		$this->getEmitter()->emit('before.rpc', ['container'=>$this->getContainer()]); 
 		
         $client = $this->getContainer()->get('json-rpc.encoder');
 
@@ -8450,13 +9436,18 @@ $stateMachineUser->initialize();
 	
 	
 	
-	public function stop($r = null){
-	    if('cli' === strtolower(\PHP_SAPI)){
+	public function stop($r = null){       
+	    if('cli' === strtolower(substr(\PHP_SAPI, 0, strlen('cli')))){
 		  return (!is_int($r)) ? exit : exit($r);	
 		}else{
-			if (!headers_sent()) {
-			  header('Connection: close');	
-			}
+			 /*	
+			$Event = new \webfan\hps\Event('kernel.Shield.send_response');			
+			$Event->setArgument('Shield', $this);			
+			$Event->setArgument('container', $this->container);  	
+			$Event->setArgument('content', $r);			
+			$this->getEmitter()->emit($Event->getName(), $Event);  
+			*/
+
 			return (null === $r) ? die() : die($r);	
 		}
 	}
@@ -8605,9 +9596,9 @@ class ShieldServiceProvider extends \frdl\ServiceProvider
    });	
 
   $container->set(\frdl\security\csrf\CsrfToken::class,static function(\UMA\DIC\Container $c) {
-	    if(!$c->get(__CLASS__)->session_started()){
-	       session_start();  
-         }		
+	 //   if(!$c->get(__CLASS__)->session_started()){
+	  //     session_start();  
+     //    }		
 	  
       return new \frdl\security\csrf\CsrfToken($_POST, $_SESSION, $_SERVER);
    });		
@@ -8685,8 +9676,10 @@ class IndexShield
 	
 	public function __invoke(/*\webfan\hps\patch\ngScope*/  $context){
 		
-	
-		
+	//if(!$this->AppShield->session_started()){
+	//	session_start();
+	//}
+		$this->AppShield->initialize();
 		
 ?><!DOCTYPE html>
 <html>
@@ -8706,7 +9699,9 @@ class IndexShield
 <!-- <link rel="manifest" type="application/manifest+json" href="/manifest.webapp" /> -->
 <link rel="icon" type="image/x-icon" href="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/favicon.ico" />
 <link rel="shortcut icon" href="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/favicon.ico" type="image/ico">
-
+<script>
+ window.name = 'NG_DEFER_BOOTSTRAP!Webfan Setup';		
+</script>
 <style type="text/css">
 *:not([data-text]) {
  margin: 0.1em; margin-left: 0.1em; padding-right: 0.1em; vertical-align:top;
@@ -8740,7 +9735,7 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
     width: auto; text-align:left; }
 
 .centered { border: 0;  width: auto; max-width:99%;margin:40px auto; color: black; padding:10px;border:2px solid #b1c5de; text-align:right;overflow:auto;
- background: url(https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'domainundhomepagespeicher.webfan.de'  ?>/bilder/domainundhomepagespeicher/produkte/kurzbeschreibung/24.251.251THP.produktbild_artikelbeschreibung.jpg) no-repeat;
+ background: url(https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/bilder/domainundhomepagespeicher/produkte/kurzbeschreibung/24.251.251THP.produktbild_artikelbeschreibung.jpg) no-repeat;
 }
 .aligncenter {text-align:center;}
 .content {
@@ -8765,13 +9760,14 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 </style>
 
 <link href="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/cdn/application/<?php 
-			echo date('Y').date('W').'.'.max($this->AppShield->latest->time, 1).$this->AppShield->getVersion(false);
+			echo $this->AppShield->getCacheBustKey();
 ?>/node_modules/bootstrap-4/css/bootstrap-min.css" type="text/css" rel="stylesheet">	
 
 	
+	
+<script type="text/javascript" src="https://frdl.webfan.de/cdn/frdl/flow/components/frdl/intent/webintents.js"></script>	
 
 
-<script type="text/javascript" src="https://webfan.de/cdn/frdl/flow/components/frdl/intent/webintents.js"></script>	
 <script>
 
 (function(){
@@ -8785,8 +9781,8 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 		if(window.intent)window.__frdl_intent=window.intent;
 	  setTimeout(function(){  	
 		  window.name = OldName;
-		process.ready(function(){			
-			
+		  process.ready(function(){			
+		  	
 			
 						if(window.intent)window.__frdl_intent=window.intent;
 			
@@ -8804,7 +9800,7 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 				},2000);
 			},8);
 		});	
-	  },1000);
+	  },1700);
 	});
 	
 }());
@@ -8812,7 +9808,7 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 	
 	
 <script type="text/javascript" src="https://<?php echo (isset($context['workspace'])) ? $context['workspace'] : 'frdl.webfan.de'  ?>/cdn/application/<?php 
-			echo date('Y').'-'.date('W').'-'.max($this->AppShield->latest->time, 1, filemtime($this->AppShield->getStub()->location)).'-'.$this->AppShield->getVersion(false);
+			echo $this->AppShield->getCacheBustKey();
 ?>/frdlweb.js"></script>	
 	
 	
@@ -8821,33 +9817,10 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 <meta name="frdl.inX.dictonary-file" content="__PROTOCOL__//__HOST__/software-center/modules-api/locales/__LANG__/dict.jsonp">
 <meta name="frdl.inX.dictonary-file" content="__PROTOCOL__//__HOST__/software-center/modules-api/locales/frdlweb/installer/__LANG__/dict.jsonp">	
 <?php
- // if(!$this->AppShield->getContainer()->get('csrf-token-service')->session_started()){
-//	session_start();  
-//  }		
- $this->AppShield->getContainer()->get('csrf-token-service')->insertHeaderTokenHtml($context['baseUrlInstaller'].'?web=login.php', true);	
+ $this->AppShield->getContainer()->get('csrf-token-service')->insertHeaderTokenHtml('/login/', true);	
 ?>	
 </head>	
 <body>	
-   <div frdl-id="mainProgressBar" class="ng-cloak page-header-wrapper" style="height:16px;width:100%;position:fixed;left:0px;top:0px;z-index:700;" ng-cloak>
-	
-	   
-	   <!--
-	<uib-progressbar frdl-id="mainProgressBar" animate="true" value="progressbarValue" max="100" type="success"></uib-progressbar>  
-	   -->
-	<uib-progress animate="true" ng-show="progressbarStacked.length" style="min-right:0px;">
-		<uib-bar animate="true" ng-repeat="bar in progressbarStacked track by $index" value="bar.value" type="{{bar.type}}" 
-				 style="left:{{$index * 5}}px;width:{{bar.value}}%;min-right:0px;z-index:{{700 + $index}};">
-			<span ng-show="bar && bar.value>-1 && $index==0" class="f-right" style="position:absolute;">{{bar.value}}%</span>
-			<span ng-show="bar && bar.label && $index!=0" class="f-left" style="position:absolute;">{{bar.label}}</span>
-			
-			
-		</uib-bar>
-	 </uib-progress> 
-	   <span ng-show="progressbarStacked.length" ng-bind="progressHint"></span>
-   </div>		
-	
-<div oc-lazy-load="['frdlweb.install', 'ui-notification']">	
-	
 	
 	<div style="position:fixed;font-style:italic;bottom:0px;">
 	  <small>
@@ -8855,13 +9828,17 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
 		  <i>powered by</i> webfan@frdl
 		  </a>
 		</small>
-	</div>			
+	</div>	
 	
+	
+<div oc-lazy-load="['frdlweb.install', 'ui-notification', 'frdl-ui-progressbar']">	
+
 
 	
 <div ng-controller="WizCtrl">	
 
-
+	<frdl-progressbar></frdl-progressbar>	
+	
 	
 <div style="position:fixed;float:top;padding:4px;padding-top:2px;margin:12px;z-Index:999;top:1px;left:1px;" ng-cloak>
 <hamburger-button ng-cloak>	
@@ -8923,27 +9900,78 @@ a#forgot:hover { text-decoration:underline; color:#0F0F0F; border-color:#666666;
   <a ng-show="!$state.current || $state.current.name==''" ui-sref="install({})"  class="btn btn-success" ui-sref-active="active">Dashboard</a>
 </div>				 
 				 
+		
+	
+<div class="d-rel-inline-block" ui-view="projectStartView"></div>
+		
+		
 	
 
 		
-	
-<div class="d-block f-bottom" ui-view="bottomView">			
 		
-	<strong webfan-fadeout="3000">Welcome to the Frdlweb CMS Installer...!</strong>	
-	<noscript><error>You MUST enable javascript in your browser to use this site!</error></noscript>	
-		
-</div>	
-		
-		
-<div class="d-block f-bottom" ui-view="terminalView">
+<div class="d-block f-bottom" ui-view="terminalView"  ng-cloak>
  
  <div ng-include="urls.tpl_terminal_buttons" ng-cloak></div>	
- <div ng-include="urls.terminal" style="height:auto;max-height:1024;width:100%;position:relative;overflow:scroll;padding:0px;margin:0px;" ng-cloak></div>	
+ <div ng-include="urls.terminal" ng-cloak></div>	
 	<small frdl-hint="terminal-login-how-to"><i>The terminal password is the same as your <a ui-sref="install({})" ui-sref-active="active">admin/root password</a>!</i></small>
  <div ng-include="urls.tpl_terminal_buttons" ng-cloak></div>	
 </div>	
-				
-<script>		
+	
+	
+<div class="d-block f-bottom" ui-view="messagesView"  ng-cloak>
+ <!-- <div ng-include="urls.tpl_messages" ng-cloak></div>	-->
+ 
+	<ui-notification-log log-template="{{urls.tpl_messages}}"></ui-notification-log>
+ 
+</div>		
+	
+	
+	
+<div class="d-block f-bottom" ui-view="bottomView">			
+		
+	<strong webfan-fadeout="100" class="with-ico">Welcome to the Frdlweb CMS Installer...!</strong>	
+	<noscript><error>You MUST enable javascript in your browser to use this site!</error></noscript>	
+		
+</div>	
+	
+	
+<script>
+window.addEventListener('DOMContentLoaded', function(){	 	
+
+
+
+var weiter = false;
+	
+process.addReadyCheck(function(){
+	if('undefined'===typeof require)return false;
+	 var Webfan = require('@frdl/webfan');
+	 return weiter === true && 'undefined'!==typeof Webfan.hps && 'undefined'!==typeof Webfan.hps.terminal  && 'undefined'!==typeof Webfan.hps.terminal.settings; 
+});
+	
+
+	 
+<?php		 
+//if($this->AppShield->isAutoupdate() && filemtime($this->AppShield->getStub()->location) > time() - 30*60){
+if($this->AppShield->isAutoupdate() || filemtime($this->AppShield->getStub()->location) > time() - 30*60){	 
+?>	
+process.once('ready:angularjs:root', function(){	
+  require.config({
+    urlArgs: "bust=<?php
+	  echo $this->AppShield->getCacheBustKey();
+	  ?>"
+  });	
+});
+<?php
+}//if($this->AppShield->isAutoupdate()){
+?>		
+process.once('ready:angularjs:root', function(){	
+	process.nextTick(function(){	
+		weiter=true;
+	});	
+});	
+	
+	
+	
 process.once('ready:angularjs:root', function(){	
   var Webfan = require('@frdl/webfan');	
 	
@@ -8964,6 +9992,8 @@ process.once('ready:angularjs:root', function(){
 	
 	  	
 }); 
+	
+}); 	
 </script>	
 	
 </div>
@@ -8977,10 +10007,14 @@ process.once('ready:angularjs:root', function(){
 	
 </div>	
 	 
-<div style="display:none;">
+<div style="display:none;" ng-cloak>
  <switch-button></switch-button>	
 </div>
-	<!--   href="http://webfan.de/cdn/frdl/flow/components/frdl/intent/test.service.html" -->
+
+	
+
+</div>	
+	
 	
 <intent
     action="composer.package.apply"
@@ -8988,18 +10022,1019 @@ process.once('ready:angularjs:root', function(){
     href="https://<?php echo $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']; ?>" 
     title="Frdlweb/Webfan Installshield @ <?php echo $_SERVER['SERVER_NAME']; ?>" 
     disposition="new" 
-    icon="http://webfan.de/cdn/frdl/flow/components/frdl/webfan/icon.ico" ></intent>	
+    icon="https://domainundhomepagespeicher.webfan.de/favicon.ico" ></intent>	
 	
 
 	
 	
-	
-</div>	
+		
 </body>
 </html>
 <?php
 	}
 	
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/frdl/security/csrf/CsrfToken.php" ; name="class frdl\security\csrf\CsrfToken"
+Content-Type: application/x-httpd-php
+
+<?php  
+	
+namespace frdl\security\csrf;
+
+use ParagonIE\AntiCSRF\Reusable as BaseTokenClass;
+use ParagonIE\AntiCSRF\AntiCSRF;
+
+use ParagonIE\ConstantTime\{
+    Base64UrlSafe,
+    Binary
+};
+use Error;
+
+use DateInterval;
+
+class CsrfToken extends BaseTokenClass
+{
+    public function __construct(
+        &$post = null,
+        &$session = null,
+        &$server = null
+    ) {	
+       parent::__construct($post, $session, $server);
+	   $this->setTokenLifetime(new DateInterval('P2D'));	
+	   $this->hmac_ip = false;	
+    }
+	
+
+    /**
+     * Use this to change the configuration settings.
+     * Only use this if you know what you are doing.
+     *
+     * @param array $options
+     * @return self
+     */
+    public function reconfigure(array $options = []): AntiCSRF
+    {
+        /** @var string $opt */
+        /** @var string $val */
+        foreach ($options as $opt => $val) {
+            switch ($opt) {
+                case 'formIndex':
+                case 'formToken':
+                case 'sessionIndex':
+                case 'useNativeSession':
+                case 'recycle_after':
+                case 'hmac_ip':
+                case 'expire_old':
+                    /** @psalm-suppress MixedAssignment */
+                    $this->$opt = $val;
+                    break;
+                case 'hashAlgo':
+                    if (\in_array($val, \hash_algos(), true)) {
+                        $this->hashAlgo = (string) $val;
+                    }
+                    break;
+                case 'lock_type':
+                    if (\in_array($val, array('REQUEST_URI','PATH_INFO'), true)) {
+                        $this->lock_type = (string) $val;
+                    }
+                    break;
+                case 'tokenLifetime':
+                    if ($val instanceof \DateInterval) {
+                        $this->tokenLifetime = $val;
+                    }
+                    break;					
+            }
+        }
+        return $this;
+    }	
+	
+    public function validateRequest($lockToUri = ''): bool
+    {
+		if(null===$lockTo){
+		 $lockTo='';	
+		}
+	   if(isset($this->server['HTTP_X_CSRF_TOKEN'])){
+		  // $tokenData = explode('.', Base64UrlSafe::decode($this->server['HTTP_X_CSRF_TOKEN']), 2);
+		   $tokenData = explode('.', $this->server['HTTP_X_CSRF_TOKEN'], 2);
+		   if(2 !== count($tokenData)){
+			  return false;   
+		   }
+		  // $this->post[$this->formToken] = Base64UrlSafe::decode($tokenData[1]); 
+		  // $this->post[$this->formIndex] = Base64UrlSafe::decode($tokenData[0]); 
+		   $this->post[$this->formToken] = $tokenData[1]; 
+		   $this->post[$this->formIndex] = $tokenData[0]; 		   
+	   }
+
+		//return parent::validateRequest();
+		     
+		 if ($this->useNativeSession) {
+            if (!isset($_SESSION[$this->sessionIndex])) {
+                return false;
+            }
+            /** @var array<string, array<string, mixed>> $sess */
+            $sess =& $_SESSION[$this->sessionIndex];
+        } else {
+            if (!isset($this->session[$this->sessionIndex])) {
+                return false;
+            }
+            /** @var array<string, array<string, mixed>> $sess */
+            $sess =& $this->session[$this->sessionIndex];
+        }
+
+        if (
+            empty($this->post[$this->formIndex]) ||
+            empty($this->post[$this->formToken])
+        ) {
+            // User must transmit a complete index/token pair
+            return false;
+        }
+
+        // Let's pull the POST data
+        /** @var string $index */
+        $index = $this->post[$this->formIndex];
+        /** @var string $token */
+        $token = $this->post[$this->formToken];
+        if (!\is_string($index) || !\is_string($token)) {
+            return false;
+        }
+
+		
+		//   print_r($sess); 
+		//   print_r($token); 	
+		
+        if (!isset($sess[$index])) {
+            // CSRF Token not found
+            return false;
+        }
+
+        if (!\is_string($index) || !\is_string($token)) {
+            return false;
+        }
+
+        // Grab the value stored at $index
+        /** @var array<string, mixed> $stored */
+        $stored = $sess[$index];
+
+        // We don't need this anymore
+        if ($this->deleteToken($sess[$index])) {
+            unset($sess[$index]);
+        }
+
+        // Which form action="" is this token locked to?
+        /** @var string $lockTo */
+        $lockTo = (null===$lockToUri)
+			  ? $this->server[$this->lock_type]
+			  : $lockToUri;
+        if (\preg_match('#/$#', $lockTo)) {
+            // Trailing slashes are to be ignored
+            $lockTo = Binary::safeSubstr(
+                $lockTo,
+                0,
+                Binary::safeStrlen($lockTo) - 1
+            );
+        }
+
+        if (!\hash_equals($lockTo, (string) $stored['lockTo'])) {
+            // Form target did not match the request this token is locked to!
+            return false;
+        }
+
+        // This is the expected token value
+        if ($this->hmac_ip === false) {
+            // We just stored it wholesale
+            /** @var string $expected */
+            $expected = $stored['token'];
+        } else {
+            // We mixed in the client IP address to generate the output
+            /** @var string $expected */
+            $expected = Base64UrlSafe::encode(
+                \hash_hmac(
+                    $this->hashAlgo,
+                    isset($this->server['REMOTE_ADDR'])
+                        ? (string) $this->server['REMOTE_ADDR']
+                        : '127.0.0.1',
+                    (string) Base64UrlSafe::decode((string) $stored['token']),
+                    true
+                )
+            );
+        }
+        return \hash_equals($token, $expected);
+	}
+
+    public function insertHeaderToken(string $lockTo = '', bool $echo = true): string
+    {
+     $token_array = $this->getTokenArray($lockTo);
+		  // $token_array = parent::getTokenArray($lockTo);
+		
+	
+       // $ret = Base64UrlSafe::encode($token_array[0].'.'.$token_array[1]);  
+		  //$ret = Base64UrlSafe::encode($token_array[$this->formIndex]).'.'.Base64UrlSafe::encode($token_array[$this->formToken]);
+		$ret =$token_array[$this->formIndex].'.'.$token_array[$this->formToken];
+        if ($echo) {
+            echo $ret;
+            return '';
+        }
+        return $ret;
+    }	
+    /**
+     * Retrieve a token array for unit testing endpoints
+     *
+     * @param string $lockTo
+     * @return array
+     *
+     * @throws \Exception
+     * @throws \TypeError
+     */
+    public function getTokenArray(string $lockTo = ''): array
+    {
+        if ($this->useNativeSession) {
+            if (!isset($_SESSION[$this->sessionIndex])) {
+                $_SESSION[$this->sessionIndex] = [];
+            }
+        } elseif (!isset($this->session[$this->sessionIndex])) {
+            $this->session[$this->sessionIndex] = [];
+        }
+
+        if (empty($lockTo)) {
+            /** @var string $lockTo */
+            $lockTo = isset($this->server['REQUEST_URI'])
+                ? $this->server['REQUEST_URI']
+                : '/';
+        }
+
+        if (\preg_match('#/$#', $lockTo)) {
+            $lockTo = Binary::safeSubstr($lockTo, 0, Binary::safeStrlen($lockTo) - 1);
+        }
+
+        list($index, $token) = $this->generateToken($lockTo);
+
+        if ($this->hmac_ip !== false) {
+            // Use HMAC to only allow this particular IP to send this request
+            $token = Base64UrlSafe::encode(
+                \hash_hmac(
+                    $this->hashAlgo,
+                    isset($this->server['REMOTE_ADDR'])
+                        ? (string) $this->server['REMOTE_ADDR']
+                        : '127.0.0.1',
+                    (string) Base64UrlSafe::decode($token),
+                    true
+                )
+            );
+        }
+
+        return [
+            $this->formIndex => $index,
+            $this->formToken => $token,
+        ];
+    }
+	
+	
+    protected function generateToken(string $lockTo = ''): array
+    {
+        $index = Base64UrlSafe::encode(\random_bytes(18));
+        $token = Base64UrlSafe::encode(\random_bytes(33));
+
+		$uri = (!empty($lockTo)) ? $lockTo
+			   : ( isset($this->server['REQUEST_URI'])
+                ? $this->server['REQUEST_URI']
+                : $this->server['SCRIPT_NAME']);
+		
+        $new = $this->buildBasicToken([
+          //  'created' =>\intval(new \DateTime()),
+			'created' =>new \DateTime(),
+            'uri' => $uri,
+            'token' => $token
+        ]);
+
+        if (\preg_match('#/$#', $lockTo)) {
+            $lockTo = Binary::safeSubstr(
+                $lockTo,
+                0,
+                Binary::safeStrlen($lockTo) - 1
+            );
+        }
+
+        if ($this->useNativeSession) {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $_SESSION[$this->sessionIndex];
+        } else {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $this->session[$this->sessionIndex];
+        }
+        $sess[$index] = $new;
+        $sess[$index]['lockTo'] = $lockTo;
+
+        $this->recycleTokens();
+        return [$index, $token];
+    }
+
+    /**
+     * Enforce an upper limit on the number of tokens stored in session state
+     * by removing the oldest tokens first.
+     *
+     * @return self
+     */
+    protected function recycleTokens()
+    {
+        if (!$this->expire_old) {
+            // This is turned off.
+            return $this;
+        }
+
+        if ($this->useNativeSession) {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $_SESSION[$this->sessionIndex];
+        } else {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $this->session[$this->sessionIndex];
+        }
+        // Sort by creation time
+        \uasort(
+            $sess,
+            function (array $a, array $b): int {
+                return (int) ($a['created'] <=> $b['created']);
+            }
+        );
+        while (\count($sess) > $this->recycle_after) {
+            // Let's knock off the oldest one
+            \array_shift($sess);
+        }
+        return $this;
+    }
+    public function deleteToken(array $token): bool
+    {
+        if (empty($token['created-date'])) {
+            return true;
+        }
+        if (!($this->tokenLifetime instanceof \DateInterval)) {
+            return false;
+        }
+        $dateTime = (new \DateTime($token['created-date']))->add($this->tokenLifetime);
+        $now = new \DateTime();
+        return $dateTime >= $now;
+    }
+	
+    public function insertHeaderTokenHtml(string $lockTo = '', bool $echo = true): string
+    {
+        $token = $this->insertHeaderToken($lockTo, false);
+	//	$lockToEncoded = urlencode($lockTo);
+		$lockToEncoded = $lockTo;
+		
+		
+		$ret = <<<HTMLCODE
+<script>
+(function(t, l){
+'use strict';
+
+ function d(){
+   var meta = document.createElement('meta');
+   meta.setAttribute('name', 'CSRF-Token');
+   meta.setAttribute('content', t);
+   meta.setAttribute('frdl-lockto', l);
+   document.head.append(meta);
+ }
+
+  if('undefined'!==typeof process && 'function'===process.ready){
+   process.ready(function(){
+    d();
+   });
+ }else if('undefined'!==typeof jQuery){
+   jQuery(document).ready(function(){
+      d();
+   });
+ }else if('undefined'!==typeof document && 'undefined'===typeof document.body){
+   document.addEventListener('DOMContentLoaded', d);
+ }else if('complete'===document.readyState && 'undefined'!==typeof document && 'undefined'!==typeof document.head && 'undefined'!==typeof document.body){
+      d();
+ }else{
+   setTimeout(function(){
+     d();
+   },1750);
+ }
+
+}('$token', '$lockToEncoded'));
+</script>
+HTMLCODE;
+		
+        if ($echo) {
+            echo $ret;
+            return '';
+        }
+        return $ret;
+    }		
+	
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/ParagonIE/AntiCSRF/Reusable.php" ; name="class ParagonIE\AntiCSRF\Reusable"
+Content-Type: application/x-httpd-php
+
+<?php 
+declare(strict_types=1);
+
+namespace ParagonIE\AntiCSRF;
+
+/**
+ * Class Reusable
+ *
+ * Reusable variant of the AntiCSRF class.
+ * Tokens don't expire after a single use. This is dangerous, but allows them
+ * to be used in AJAX forms.
+ *
+ * We will not award any bug bounties for any vulnerabilities found in the
+ * Reusable class that are not also present in the main class, as we believe
+ * this use-case to be a significant security downgrade.
+ *
+ * @package ParagonIE\AntiCSRF
+ */
+class Reusable extends AntiCSRF
+{
+    /**
+     * @var \DateInterval|null
+     */
+    protected $tokenLifetime = null;
+
+    /**
+     * @param \DateInterval $interval
+     * @return self
+     */
+    public function setTokenLifetime(\DateInterval $interval): self
+    {
+        $this->tokenLifetime = $interval;
+        return $this;
+    }
+
+    /**
+     * For figuring
+     *
+     * @param array $args
+     * @return array
+     */
+    protected function buildBasicToken(array $args = []): array
+    {
+        $args['created-date'] = (new \DateTime())->format(\DateTime::ATOM);
+        return $args;
+    }
+
+    /**
+     * Use this to change the configuration settings.
+     * Only use this if you know what you are doing.
+     *
+     * @param array $options
+     * @return AntiCSRF
+     */
+    public function reconfigure(array $options = []): AntiCSRF
+    {
+        /** @var string $opt */
+        /** @var \DateInterval $val */
+        foreach ($options as $opt => $val) {
+            switch ($opt) {
+                case 'tokenLifetime':
+                    if ($val instanceof \DateInterval) {
+                        $this->tokenLifetime = $val;
+                    }
+                    break;
+            }
+        }
+        return parent::reconfigure($options);
+    }
+
+    /**
+     * @param array<string, string> $token
+     * @return bool
+     */
+    public function deleteToken(array $token): bool
+    {
+        if (empty($token['created-date'])) {
+            return true;
+        }
+        if (!($this->tokenLifetime instanceof \DateInterval)) {
+            return false;
+        }
+        $dateTime = (new \DateTime($token['created-date']))->add($this->tokenLifetime);
+        $now = new \DateTime();
+        return $dateTime >= $now;
+    }
+} ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$DIR_PSR4/ParagonIE/AntiCSRF/AntiCSRF.php" ; name="class ParagonIE\AntiCSRF\AntiCSRF"
+Content-Type: application/x-httpd-php
+
+<?php 
+declare(strict_types=1);
+namespace ParagonIE\AntiCSRF;
+
+use ParagonIE\ConstantTime\{
+    Base64UrlSafe,
+    Binary
+};
+use Error;
+
+/**
+ * Copyright (c) 2015 - 2018 Paragon Initiative Enterprises <https://paragonie.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *******************************************************************************
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 - 2018 Paragon Initiative Enterprises
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ *
+ * If you would like to use this library under different terms, please
+ * contact Paragon Initiative Enterprises to inquire about a license exemption.
+ */
+class AntiCSRF
+{
+    /**
+     * @var string
+     */
+    protected $formIndex = '_CSRF_INDEX';
+
+    /**
+     * @var string
+     */
+    protected $formToken = '_CSRF_TOKEN';
+
+    /**
+     * @var string
+     */
+    protected $sessionIndex = 'CSRF';
+
+    /**
+     * @var string
+     */
+    protected $hashAlgo = 'sha256';
+
+    /**
+     * @var int
+     */
+    protected $recycle_after = 65535;
+
+    /**
+     * @var bool
+     */
+    protected $hmac_ip = true;
+
+    /**
+     * @var bool
+     */
+    protected $expire_old = false;
+
+    /**
+     * @var string
+     */
+    protected $lock_type = 'REQUEST_URI';
+
+    // Injected; defaults to references to superglobals
+
+    /**
+     * @var array
+     */
+    public $post = [];
+
+    /**
+     * @var array
+     */
+    public $session = [];
+
+    /**
+     * @var bool
+     */
+    public $useNativeSession = false;
+
+    /**
+     * @var array
+     */
+    public $server = [];
+
+    /**
+     * NULL is not a valid array type
+     *
+     * @param array $post
+     * @param array $session
+     * @param array $server
+     * @throws Error
+     */
+    public function __construct(
+        &$post = null,
+        &$session = null,
+        &$server = null
+    ) {
+        if (!\is_null($post)) {
+            $this->post =& $post;
+        } else {
+            $this->post =& $_POST;
+        }
+
+        if (!\is_null($server)) {
+            $this->server =& $server;
+        } else {
+            $this->server =& $_SERVER;
+        }
+
+        if (!\is_null($session)) {
+            $this->session =& $session;
+        } elseif (isset($_SESSION)) {
+            if (\is_array($_SESSION)) {
+                $this->session =& $_SESSION;
+                $this->useNativeSession = true;
+            }
+        } else {
+            throw new Error('No session available for persistence');
+        }
+    }
+
+    /**
+     * Allow derived classes to inject arguments.
+     *
+     * @param array $args
+     * @return array
+     */
+    protected function buildBasicToken(array $args = []): array
+    {
+        return $args;
+    }
+
+    /**
+     * @param array $token
+     * @return bool
+     */
+    public function deleteToken(array $token): bool
+    {
+        return true;
+    }
+
+    /**
+     * Insert a CSRF token to a form
+     *
+     * @param string $lockTo This CSRF token is only valid for this HTTP request endpoint
+     * @param bool $echo if true, echo instead of returning
+     * @return string
+     * @throws \Exception
+     * @throws \TypeError
+     */
+    public function insertToken(string $lockTo = '', bool $echo = true): string
+    {
+        $token_array = $this->getTokenArray($lockTo);
+        $ret = \implode(
+            \array_map(
+                function(string $key, string $value): string {
+                    return "<!--\n-->".
+                        "<input type=\"hidden\"" .
+                        " name=\"" . $key . "\"" .
+                        " value=\"" . self::noHTML($value) . "\"" .
+                        " />";
+                },
+                \array_keys($token_array),
+                $token_array
+            )
+        );
+        if ($echo) {
+            echo $ret;
+            return '';
+        }
+        return $ret;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSessionIndex(): string
+    {
+        return $this->sessionIndex;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormIndex(): string
+    {
+        return $this->formIndex;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormToken(): string
+    {
+        return $this->formToken;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLockType(): string
+    {
+        return $this->lock_type;
+    }
+
+    /**
+     * Retrieve a token array for unit testing endpoints
+     *
+     * @param string $lockTo
+     * @return array
+     *
+     * @throws \Exception
+     * @throws \TypeError
+     */
+    public function getTokenArray(string $lockTo = ''): array
+    {
+        if ($this->useNativeSession) {
+            if (!isset($_SESSION[$this->sessionIndex])) {
+                $_SESSION[$this->sessionIndex] = [];
+            }
+        } elseif (!isset($this->session[$this->sessionIndex])) {
+            $this->session[$this->sessionIndex] = [];
+        }
+
+        if (empty($lockTo)) {
+            /** @var string $lockTo */
+            $lockTo = isset($this->server['REQUEST_URI'])
+                ? $this->server['REQUEST_URI']
+                : '/';
+        }
+
+        if (\preg_match('#/$#', $lockTo)) {
+            $lockTo = Binary::safeSubstr($lockTo, 0, Binary::safeStrlen($lockTo) - 1);
+        }
+
+        list($index, $token) = $this->generateToken($lockTo);
+
+        if ($this->hmac_ip !== false) {
+            // Use HMAC to only allow this particular IP to send this request
+            $token = Base64UrlSafe::encode(
+                \hash_hmac(
+                    $this->hashAlgo,
+                    isset($this->server['REMOTE_ADDR'])
+                        ? (string) $this->server['REMOTE_ADDR']
+                        : '127.0.0.1',
+                    (string) Base64UrlSafe::decode($token),
+                    true
+                )
+            );
+        }
+
+        return [
+            $this->formIndex => $index,
+            $this->formToken => $token,
+        ];
+    }
+
+
+    /**
+     * Validate a request based on $this->session and $this->post data
+     *
+     * @return bool
+     * @throws \TypeError
+     */
+    public function validateRequest(): bool
+    {
+        if ($this->useNativeSession) {
+            if (!isset($_SESSION[$this->sessionIndex])) {
+                return false;
+            }
+            /** @var array<string, array<string, mixed>> $sess */
+            $sess =& $_SESSION[$this->sessionIndex];
+        } else {
+            if (!isset($this->session[$this->sessionIndex])) {
+                return false;
+            }
+            /** @var array<string, array<string, mixed>> $sess */
+            $sess =& $this->session[$this->sessionIndex];
+        }
+
+        if (
+            empty($this->post[$this->formIndex]) ||
+            empty($this->post[$this->formToken])
+        ) {
+            // User must transmit a complete index/token pair
+            return false;
+        }
+
+        // Let's pull the POST data
+        /** @var string $index */
+        $index = $this->post[$this->formIndex];
+        /** @var string $token */
+        $token = $this->post[$this->formToken];
+        if (!\is_string($index) || !\is_string($token)) {
+            return false;
+        }
+
+        if (!isset($sess[$index])) {
+            // CSRF Token not found
+            return false;
+        }
+
+        if (!\is_string($index) || !\is_string($token)) {
+            return false;
+        }
+
+        // Grab the value stored at $index
+        /** @var array<string, mixed> $stored */
+        $stored = $sess[$index];
+
+        // We don't need this anymore
+        if ($this->deleteToken($sess[$index])) {
+            unset($sess[$index]);
+        }
+
+        // Which form action="" is this token locked to?
+        /** @var string $lockTo */
+        $lockTo = $this->server[$this->lock_type];
+        if (\preg_match('#/$#', $lockTo)) {
+            // Trailing slashes are to be ignored
+            $lockTo = Binary::safeSubstr(
+                $lockTo,
+                0,
+                Binary::safeStrlen($lockTo) - 1
+            );
+        }
+
+        if (!\hash_equals($lockTo, (string) $stored['lockTo'])) {
+            // Form target did not match the request this token is locked to!
+            return false;
+        }
+
+        // This is the expected token value
+        if ($this->hmac_ip === false) {
+            // We just stored it wholesale
+            /** @var string $expected */
+            $expected = $stored['token'];
+        } else {
+            // We mixed in the client IP address to generate the output
+            /** @var string $expected */
+            $expected = Base64UrlSafe::encode(
+                \hash_hmac(
+                    $this->hashAlgo,
+                    isset($this->server['REMOTE_ADDR'])
+                        ? (string) $this->server['REMOTE_ADDR']
+                        : '127.0.0.1',
+                    (string) Base64UrlSafe::decode((string) $stored['token']),
+                    true
+                )
+            );
+        }
+        return \hash_equals($token, $expected);
+    }
+
+    /**
+     * Use this to change the configuration settings.
+     * Only use this if you know what you are doing.
+     *
+     * @param array $options
+     * @return self
+     */
+    public function reconfigure(array $options = []): self
+    {
+        /** @var string $opt */
+        /** @var string $val */
+        foreach ($options as $opt => $val) {
+            switch ($opt) {
+                case 'formIndex':
+                case 'formToken':
+                case 'sessionIndex':
+                case 'useNativeSession':
+                case 'recycle_after':
+                case 'hmac_ip':
+                case 'expire_old':
+                    /** @psalm-suppress MixedAssignment */
+                    $this->$opt = $val;
+                    break;
+                case 'hashAlgo':
+                    if (\in_array($val, \hash_algos(), true)) {
+                        $this->hashAlgo = (string) $val;
+                    }
+                    break;
+                case 'lock_type':
+                    if (\in_array($val, array('REQUEST_URI','PATH_INFO'), true)) {
+                        $this->lock_type = (string) $val;
+                    }
+                    break;
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Generate, store, and return the index and token
+     *
+     * @param string $lockTo What URI endpoint this is valid for
+     * @return string[]
+     * @throws \TypeError
+     * @throws \Exception
+     */
+    protected function generateToken(string $lockTo): array
+    {
+        $index = Base64UrlSafe::encode(\random_bytes(18));
+        $token = Base64UrlSafe::encode(\random_bytes(33));
+
+        $new = $this->buildBasicToken([
+            'created' => \intval(
+                \date('YmdHis')
+            ),
+            'uri' => isset($this->server['REQUEST_URI'])
+                ? $this->server['REQUEST_URI']
+                : $this->server['SCRIPT_NAME'],
+            'token' => $token
+        ]);
+
+        if (\preg_match('#/$#', $lockTo)) {
+            $lockTo = Binary::safeSubstr(
+                $lockTo,
+                0,
+                Binary::safeStrlen($lockTo) - 1
+            );
+        }
+
+        if ($this->useNativeSession) {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $_SESSION[$this->sessionIndex];
+        } else {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $this->session[$this->sessionIndex];
+        }
+        $sess[$index] = $new;
+        $sess[$index]['lockTo'] = $lockTo;
+
+        $this->recycleTokens();
+        return [$index, $token];
+    }
+
+    /**
+     * Enforce an upper limit on the number of tokens stored in session state
+     * by removing the oldest tokens first.
+     *
+     * @return self
+     */
+    protected function recycleTokens()
+    {
+        if (!$this->expire_old) {
+            // This is turned off.
+            return $this;
+        }
+
+        if ($this->useNativeSession) {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $_SESSION[$this->sessionIndex];
+        } else {
+            /** @var array<string, array<string, string|int>> $sess */
+            $sess =& $this->session[$this->sessionIndex];
+        }
+        // Sort by creation time
+        \uasort(
+            $sess,
+            function (array $a, array $b): int {
+                return (int) ($a['created'] <=> $b['created']);
+            }
+        );
+        while (\count($sess) > $this->recycle_after) {
+            // Let's knock off the oldest one
+            \array_shift($sess);
+        }
+        return $this;
+    }
+
+    /**
+     * Wrapper for htmlentities()
+     *
+     * @param string $untrusted
+     * @return string
+     */
+    protected static function noHTML(string $untrusted): string
+    {
+        return \htmlentities($untrusted, ENT_QUOTES, 'UTF-8');
+    }
 } ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$DIR_PSR4/frdlweb/Thread/ShutdownTasks.php" ; name="class frdlweb\Thread\ShutdownTasks"
@@ -9096,7 +11131,13 @@ class RpcServiceProvider extends \frdl\ServiceProvider
 		
 	  
   $container->set( 'webfan.app.rpc.server', function(\UMA\DIC\Container $c) {
-           $server = new \UMA\JsonRpc\Server($c, 50);
+	  //\frdlweb\Api\Rpc\Server\EventableServer __construct(ContainerInterface $container, int $batchLimit = null, array $config = null, bool $discovery = true)
+         //  $server = new \UMA\JsonRpc\Server($c, 50); 
+	        $server = new \frdlweb\Api\Rpc\Server\EventableServer($c, 50, [
+				'schemaCacheDir' => $c->get('webfan.app.shield')->getCacheDir(). \DIRECTORY_SEPARATOR . 'json-schema-store' . \DIRECTORY_SEPARATOR,
+				  
+				
+				]);
 	       $server->attach('webfan.app.rpc.auth-shield');
 	   
 	        $server->set('test', \Webfan\App\Rpc\Procedure\test::class);
@@ -9369,7 +11410,7 @@ class install_config_get implements \UMA\JsonRpc\Procedure
 	
 	
 	public function auth(\UMA\JsonRpc\Request $request){
-	  return 'admin' === $this->container->get('webfan.app.fsm.user')->getCurrentState()->getName();	
+	  return 'admin' ===$this->container->get('webfan.app.fsm.user')->getCurrentState()->getName();	
 	}
 	
     /**
@@ -9412,14 +11453,56 @@ Content-Disposition: "php" ; filename="$DIR_PSR4/webfan/hps/patch/Fs.php" ; name
 Content-Type: application/x-httpd-php
 
 <?php 
-
-
-
 namespace webfan\hps\patch;
+
+
+use DirectoryIterator;
+use SplFileInfo;
+
+
 class Fs
 {
-	  
+
+/*https://www.startutorial.com/articles/view/deployment-script-in-php*/	
+ public static function recursiveCopyDir($srcDir, $destDir){
+    foreach (new DirectoryIterator($srcDir) as $fileInfo) {
+        if ($fileInfo->isDot()) {
+            continue;
+        }
+ 
+        if (!file_exists($destDir)) {
+           shell_exec('mkdir -p '.$destDir);
+        }
+ 
+        $copyTo = $destDir . '/' . $fileInfo->getFilename();
+ 
+        copy($fileInfo->getRealPath(), $copyTo);
+    }
+ }
+ 
+ public static function copyFileToDir($src, $desDir){
+    if (!file_exists($desDir)) {
+        shell_exec('mkdir -p '.$desDir);
+    }
+ 
+    $fileInfo = new SplFileInfo($src);
+ 
+    $copyTo = $desDir . '/' . $fileInfo->getFilename();
+ 
+    copy($fileInfo->getRealPath(), $copyTo);
+ }
 	
+ public static function copy($src, $desDir){
+     if(is_dir($src)){
+		 self::copy($src, $desDir);
+	 }elseif(is_file($src)){
+		 self::copyFileToDir($src, $desDir);
+	 }
+ }
+	
+ public static function remove($dir){
+    shell_exec('rm -rf '.$dir);
+ }	
 	
  public static function compress($buffer) {
         /* remove comments */
@@ -9483,7 +11566,7 @@ public static function getRootDir($path = null){
 
 }
 	
-public static function getPathUrl($dir = null){
+public static function getPathUrl($dir = null, $absolute = true){
 	if(null===$dir){
 	//	$dir = dirname($_SERVER['PHP_SELF']);
 		$dir = getcwd();
@@ -9495,10 +11578,10 @@ public static function getPathUrl($dir = null){
     $dir = str_replace('\\', '/', realpath($dir));
 
     //HTTPS or HTTP
-    $root .= !empty($_SERVER['HTTPS']) ? 'https' : 'http';
+    $root .= ($absolute) ? (!empty($_SERVER['HTTPS']) ? 'https' : 'http') : '';
 
     //HOST
-    $root .= '://' . $_SERVER['HTTP_HOST'];
+    $root .= ($absolute) ? '://' . $_SERVER['HTTP_HOST'] : '';
 
     //ALIAS
     if(!empty($_SERVER['CONTEXT_PREFIX'])) {
@@ -11306,7 +13389,7 @@ Content-Disposition: "php" ; filename="$HOME/$WEBrpc.php" ; name="stub rpc.php"
 Content-Type: application/x-httpd-php
 
 <?php if ('POST' === $_SERVER['REQUEST_METHOD']) {
-	 \Webfan\App\Shield::getInstance($this)->index('/rpc/');
+	 \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->index('/rpc/');
 }else{
   header('Contant-Type: application/json');
   echo '{"jsonrpc":"2.0","error":{"code":-32700,"message":"Only http method `post` is allowed"},"id":null}';
@@ -11317,10 +13400,10 @@ Content-Type: application/x-httpd-php
 
 <?php $state = [];
 
-$state['webfan.app.fsm.user'] = \Webfan\App\Shield::getInstance($this)->getContainer()->get('webfan.app.fsm.user')->getCurrentState()->getName(); 
+$state['webfan.app.fsm.user'] = \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->getContainer()->get('webfan.app.fsm.user')->getCurrentState()->getName(); 
 
 if('admin'===$state['webfan.app.fsm.user']){
-$state['webfan.app.fsm'] = \Webfan\App\Shield::getInstance($this)->getContainer()->get('webfan.app.fsm')->getCurrentState()->getName(); 
+$state['webfan.app.fsm'] = \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->getContainer()->get('webfan.app.fsm')->getCurrentState()->getName(); 
 
 
  $state['v'] = \Webfan\App\Shield::getInstance($this)->v; 
@@ -11333,10 +13416,10 @@ $state['webfan.app.fsm'] = \Webfan\App\Shield::getInstance($this)->getContainer(
 $state['baseUrlInstaller'] = 
 (isset(\Webfan\App\Shield::getInstance($this)->config->baseUrlInstaller)) 
 	? \Webfan\App\Shield::getInstance($this)->config->baseUrlInstaller 
-	: rtrim(\webfan\hps\patch\Fs::getPathUrl($this->location), \DIRECTORY_SEPARATOR.'/ ').\DIRECTORY_SEPARATOR.basename($_SERVER['PHP_SELF']);
+	: rtrim(\webfan\hps\patch\Fs::getPathUrl($this->location), \DIRECTORY_SEPARATOR.'/ ').'/'.basename($_SERVER['PHP_SELF']);
 
 
-$state['baseUrl'] = rtrim(\webfan\hps\patch\Fs::getPathUrl($this->location), \DIRECTORY_SEPARATOR.'/ ').\DIRECTORY_SEPARATOR;
+$state['baseUrl'] = rtrim(\webfan\hps\patch\Fs::getPathUrl($this->location), \DIRECTORY_SEPARATOR.'/ ').'/';
 
 if('admin'===$state['webfan.app.fsm.user']){
 
@@ -11347,8 +13430,8 @@ $state['host'] = (isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : $_
 $state['protocol'] = !empty($_SERVER['HTTPS']) ? 'https:' : 'http:';
 
 if('admin'===$state['webfan.app.fsm.user']){
- if(isset(\Webfan\App\Shield::getInstance($this)->config->FRDLJS_PATH)) {
- $_p=\Webfan\App\Shield::getInstance($this)->config->FRDLJS_PATH;
+ if(isset(\Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->config->FRDLJS_PATH)) {
+ $_p=\Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->config->FRDLJS_PATH;
  $_f = dirname(dirname($_p)).\DIRECTORY_SEPARATOR.'package.json';
    if(file_exists($_f)){
      $pkg = json_decode(file_get_contents($_f));
@@ -11362,7 +13445,7 @@ if('admin'===$state['webfan.app.fsm.user']){
 
  $state['emailState'] = -1;
 
- if(!isset(\Webfan\App\Shield::getInstance($this)->config->ADMIN_EMAIL) 
+ if(!isset(\Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->config->ADMIN_EMAIL) 
   || empty(\Webfan\App\Shield::getInstance($this)->config->ADMIN_EMAIL) 
   || ''===trim(\Webfan\App\Shield::getInstance($this)->config->ADMIN_EMAIL)
    || !isset(\Webfan\App\Shield::getInstance($this)->config->ADMIN_EMAIL_CONFIRMED)
@@ -11383,7 +13466,7 @@ echo json_encode($state); ?>
 Content-Disposition: "php" ; filename="$HOME/$WEBemail-confirm.php" ; name="stub email-confirm.php"
 Content-Type: application/x-httpd-php
 
-<?php if(isset($_REQUEST['code']) && isset(\Webfan\App\Shield::getInstance($this)->config->ADMIN_EMAIL_CONFIRMED) 
+<?php if(isset($_REQUEST['code']) && isset(\Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->config->ADMIN_EMAIL_CONFIRMED) 
     && $_REQUEST['code'] === \Webfan\App\Shield::getInstance($this)->config->ADMIN_EMAIL_CONFIRMED){
 	$config = \Webfan\App\Shield::getInstance($this)->config->export();
 	$config['ADMIN_EMAIL_CONFIRMED'] = true;
@@ -11400,19 +13483,13 @@ Content-Type: application/x-httpd-php
 }
 
 
-echo '<br /><a href="'.\Webfan\App\Shield::getInstance($this)->config->baseUrlInstaller.'">Continue...</a>';
+echo '<br /><a href="'.\Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->config->baseUrlInstaller.'">Continue...</a>';
 echo '<meta http-equiv="refresh" content="5; URL='.\Webfan\App\Shield::getInstance($this)->config->baseUrlInstaller .'">'; ?>
---3333EVGuDPPT
-Content-Disposition: "php" ; filename="$HOME/$WEBlogin.php" ; name="stub login.php"
-Content-Type: application/x-httpd-php
-
-<?php \Webfan\App\Shield::getInstance($this, \frdl\i::c(), true)->index('/login/'); ?>
 --3333EVGuDPPT
 Content-Disposition: "php" ; filename="$HOME/$WEBlogout.php" ; name="stub logout.php"
 Content-Type: application/x-httpd-php
 
-<?php unset($_SESSION[\Webfan\App\Shield::SESSIONKEY]);
-session_destroy();
+<?php \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->session_destroy();
 
 echo 'Good by!'; ?>
 --3333EVGuDPPT
@@ -11425,11 +13502,22 @@ Content-Type: application/x-httpd-php
 }else{
 $template = <<<TEMPLATE
 <terminal-emulator  oc-lazy-load="['terminal-emulator']">
-<div angular-terminal="workspace" greetings="$ loading frdl..." require-interpreter-module="angular-terminal/interpreter-frdl-default"></div> 
+<div angular-terminal="workspace" greetings="$ loading frdl..." require-interpreter-module="angular-terminal/interpreter-frdl-default" 
+  style="height:auto;max-height:320px;width:100%;position:relative;overflow:scroll;padding:0px;margin:0px;"></div> 
 </terminal-emulator>
 TEMPLATE;
 
 echo $template;
 } ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$HOME/$WEBlogin.php" ; name="stub login.php"
+Content-Type: application/x-httpd-php
+
+<?php \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->index('/login/'); ?>
+--3333EVGuDPPT
+Content-Disposition: "php" ; filename="$HOME/$WEBpoxy.php" ; name="stub poxy.php"
+Content-Type: application/x-httpd-php
+
+<?php \Webfan\App\Shield::getInstance($this, \frdl\i::c(), false)->initialize()->index('/proxy/'); ?>
 --3333EVGuDPPT--
 --hoHoBundary12344dh--
