@@ -16,7 +16,7 @@ composer create-project frdl/project <dir>
 ````
 <a name="webadmin"></a>
 * Make directory `./web` public, e.g. by creating a vhost with this dir as DOCUMENT_ROOT.
-* Login to `./web/admin.php` with the username of the process the current script is running on and the default-password "admin" and CHANGE THE PASSWORD!
+* Login to `./web/admin.php` with the username of the process the current (web-)script is running on and the default-password "admin" and CHANGE THE PASSWORD!
 * Setup:
   * Visit the `System` Menu to setup and configure the requirements:
         * Setup `Composer` in the `System`-Page       
