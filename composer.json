@@ -2,6 +2,7 @@
 	"name": "frdl\/project",
 	"type": "project",
 	"description": "Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application. ",
+	"keywords" : ["1.3.6.1.4.1.37553.8.1.8.8.11", "1.3.6.1.4.1.37553.8.1.8.8.11.1"],
 	"license": ["MIT"],
 	"homepage" : "https://github.com/frdl/project",
 	"repositories": [{
@@ -28,6 +29,7 @@
 			"modules\/{$vendor}.{$name}\/": ["type:frdl-module", "type:frdl-extension"],
 			"themes\/{$vendor}\/{$name}\/": ["type:frdl-theme"],
 			"web\/{$vendor}\/{$name}\/": ["type:frdl-httpdocs"],
+			"{$webroot}\/{$vendor}\/{$name}\/": ["type:frdl-httpdocs"],
 			"{$webroot}\/": ["type:frdl-public"],
 			"vendor\/frdlweb\/{$vendor}\/{$name}\/": ["vendor:frdl", "vendor:frdlweb", "vendor:webfan", "vendor:webfan3"]
 		},
@@ -84,8 +86,7 @@
         "fix": "vendor/bin/phpcbf",
         "lint": "vendor/bin/phpcs",
         "test": [
-		    "vendor/bin/phpunit",
-		    "@frdlweb frdl:test" 			
+				
 		],
 		"frdlweb":  "vendor/bin/frdlweb",
 		"frdl" : "@php vendor/bin/frdl",
