@@ -2,7 +2,7 @@
 [![Latest Stable Version](https://poser.pugx.org/frdl/project/version)](https://packagist.org/packages/frdl/project)[![Total Downloads](https://poser.pugx.org/frdl/project/downloads)](https://packagist.org/packages/frdl/project)[![License](https://poser.pugx.org/frdl/project/license)](https://packagist.org/packages/frdl/project)
 
 Kickstarter boilerplate to be used by `composer create-project` command.
-This is the [Base Project Template](/frdl/project/blob/master/composer.json)-[Intent](https://look-up.webfan3.de/?goto=oid%3A1.3.6.1.4.1.37553.8.1.8.8.11) of the Frdlweb Framework.
+This is the [Base Project Template](/frdl/project/blob/master/composer.json) as an [Intent](https://look-up.webfan3.de/?goto=oid%3A1.3.6.1.4.1.37553.8.1.8.8.11) of the Frdlweb Framework.
 
 
 ## Installation
