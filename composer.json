@@ -87,10 +87,10 @@
         },
         "frdl": {
             "level": "level-2",
-            "webfantize": [
+            "webfantize": {
 	       "flavor" : "frdl-project",
 	       "oid" : "1.3.6.1.4.1.37553.8.1.8.8.11.1"
-	    ]
+	    }
         },
         "config-plugin-output-dir": "config\/",
         "dependency-scripts": {
