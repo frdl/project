@@ -59,9 +59,6 @@
             "themes\/{$vendor}\/{$name}\/": [
                 "type:frdl-theme"
             ],
-            "..\/..\/..\/httpdocs\/testprojekt\/{$vendor}\/{$name}\/": [
-                "type:frdl-httpdocs"
-            ],
             "{$webroot}\/": [
                 "type:frdl-public"
             ],
@@ -110,12 +107,6 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https:\/\/packages.frdl.de"
-        }
-    ],
     "scripts": {
         "fix": [],
         "lint": [],
