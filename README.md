@@ -5,7 +5,7 @@
 This is currently rewritten completly, so you can either
  * Wait for next stable version...
  * Try current development versions...
- * [look at Legacy Version(s) for deprecated versions...](https://github.com/frdl/project#or-via-composer)
+ * [look at Legacy Version(s) for deprecated versions...](https://github.com/frdl/project#legacy-versions)
 
 ### Legacy Version(s)
  * [frdl/project before 2021](https://github.com/frdl/project/tree/legacy-007)
