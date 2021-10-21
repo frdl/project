@@ -1,5 +1,5 @@
 {
- "name": "frdl\/project",
+ "name": "frdl/project",
  "type": "project",
  "description": "Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application. ",
  "keywords" : ["1.3.6.1.4.1.37553.8.1.8.8.11", "1.3.6.1.4.1.37553.8.1.8.8.11.1"],
@@ -13,12 +13,11 @@
 
  ], 
 "require": {
-        "php": ">=7.2",
-        "frdl\/frdlweb-composer-installers": "*",
-        "frdl\/web": "*",
-        "roave\/security-advisories": "dev-master"
+        "php": ">=7.2 | >=8.0",
+        "frdl/webfan": "*",
+        "roave/security-advisories": "dev-master"
     },
-    "type": "project",
+     
     "autoload": {
         "psr-4": {
             "compiled\\": "compiled\/"
@@ -108,75 +107,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "fix": [],
-        "lint": [],
-        "test": [],
-        "pre-package-install": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent"
-        ],
-        "post-package-install": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent"
-        ],
-        "pre-package-update": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent"
-        ],
-        "post-package-update": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent"
-        ],
-        "pre-package-uninstall": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent"
-        ],
-        "post-package-uninstall": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processPackageEvent"
-        ],
-        "post-update-cmd": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent",
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processAfterInstallOrUpdate"
-        ],
-        "post-install-cmd": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent",
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processAfterInstallOrUpdate"
-        ],
-        "post-autoload-dump": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent",
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processAfterInstallOrUpdate",
-            "@composer frdl:compile-events",
-            "@composer frdl:check-requirements",
-            "@composer frdl:build-configs",
-            "@composer frdl:build-container",
-            "@composer frdl:build-stubs"
-        ],
-        "post-root-package-install": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
-        ],
-        "post-create-project-cmd": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
-        ],
-        "pre-install-cmd": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processBeforeInstallOrUpdate"
-        ],
-        "pre-update-cmd": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processBeforeInstallOrUpdate"
-        ],
-        "pre-autoload-dump": [
-            "Webfan\\Support\\ComposerInstallersExtender\\PackageUpdater::processCommandEvent"
-        ],
-        "frdl:compile-events": [
-            "Frdlweb\\Command\\CompileEvents::onInvoke"
-        ],
-        "frdl:build-configs": [
-            "Frdlweb\\Command\\BuildConfigWizard::onInvoke"
-        ],
-        "frdl:check-requirements": [
-            "Frdlweb\\Command\\CheckRequirements::onInvoke"
-        ],
-        "frdlweb": "@php vendor\/bin\/frdlweb",
-        "frdl": "vendor\/bin\/frdl",
-        "frdl:build-stubs": [
-            "Webfan\\Support\\Project\\StubsBuilder::onInvoke"
-        ],
-        "frdl:build-container": [
-            "Webfan\\Support\\Project\\ContainerBuilder::onInvoke"
-        ]
+
     }
 }
