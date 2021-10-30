@@ -37,28 +37,6 @@
 
   
   
-     "frdl/array-helper": {
-        "url": "https://github.com/frdl/array-helper/archive/refs/heads/main.zip",
-        "path": "~/.webfan/red/packages/frdl/array-helper",
-        "ignore": [".*"]
-      },
-      "vendor-patch/psecio.secure_dotenv": {
-        "url": "https://github.com/vendor-patch/secure_dotenv/archive/refs/heads/master.zip",
-        "path": "~/.webfan/red/modules/extension/vendor-patch/secure_dotenv",
-        "ignore": [".*"]
-      },
-      "vendor-patch/wikimedia.composer-merge-plugin": {
-        "url": "https://github.com/vendor-patch/composer-merge-plugin/archive/refs/heads/master.zip",
-        "path": "~/.webfan/red/modules/extension/vendor-patch/secure_dotenv",
-        "ignore": [".*"]
-      }
-    }
-  
-  
-  
-  
-  
-  
  ], 
 "require": {
         "php": ">=7.2|>=8.0",
