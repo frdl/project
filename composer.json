@@ -6,17 +6,72 @@
  "license": ["MIT"],
  "homepage" : "https://github.com/frdl/project", 
  "repositories": [
+         {
+            "type": "path",
+            "url": "~/.webfan/red/packages"
+        },
+         {
+            "type": "path",
+            "url": "~/.webfan/green/packages"
+        },
+         {
+            "type": "path",
+            "url": "~/.webfan/blue/packages"
+        },
+         {
+            "type": "path",
+            "url": "~/.webfan/red/modules/extension"
+        },
+         {
+            "type": "path",
+            "url": "~/.webfan/green/modules/extension"
+        },
+         {
+            "type": "path",
+            "url": "~/.webfan/blue/modules/extension"
+        },
         {
             "type": "composer",
             "url": "https:\/\/packages.frdl.de"
         }  
 
+  
+  
+     "frdl/array-helper": {
+        "url": "https://github.com/frdl/array-helper/archive/refs/heads/main.zip",
+        "path": "~/.webfan/red/packages/frdl/array-helper",
+        "ignore": [".*"]
+      },
+      "vendor-patch/psecio.secure_dotenv": {
+        "url": "https://github.com/vendor-patch/secure_dotenv/archive/refs/heads/master.zip",
+        "path": "~/.webfan/red/modules/extension/vendor-patch/secure_dotenv",
+        "ignore": [".*"]
+      },
+      "vendor-patch/wikimedia.composer-merge-plugin": {
+        "url": "https://github.com/vendor-patch/composer-merge-plugin/archive/refs/heads/master.zip",
+        "path": "~/.webfan/red/modules/extension/vendor-patch/secure_dotenv",
+        "ignore": [".*"]
+      }
+    }
+  
+  
+  
+  
+  
+  
  ], 
 "require": {
         "php": ">=7.2|>=8.0",
         "frdl/webfan": "*",
         "roave/security-advisories": "dev-master"
- },     
+ },  
+ "suggest": {
+        "frdl/project" : "Frdlweb Project Template",        
+        "foxy/foxy": "Manage npm depencencies/assets",
+        "frdlweb/app-implementation" : "Implements \\frdlweb\\AppInterface",
+        "frdlweb/runtime-implementation" : "Implements runtime",
+        "frdlweb/workspace-implementation" : "Implements workspace"
+    },      
   "autoload": {
         "psr-4": {
             "compiled\\": "compiled\/"
@@ -26,27 +81,17 @@
         "bin-dir": "~/.webfan/runtime/.bin",
         "preferred-install": "auto",
         "cache-files-ttl": 3600,
-        "prepend-autoloader": true 
+        "prepend-autoloader": true
  },
  "conflict": {},
  "extra": {
-     "compile-mode": "all",     
+    "compile-mode": "all",     
     "foxy": true,
     "downloads": {
       "*": {
-        "path": "./vendor/vendor-patch/{$id}",
+        "path": "./vendor/{$id}",
         "ignore": ["test", "tests", "doc", "docs", ".*"]
-      },
-      "frdl/array-helper": {
-        "url": "https://github.com/frdl/array-helper/archive/refs/heads/main.zip",
-        "path": "~/.webfan/runtime/vendor/frdl/array-helper",
-        "ignore": [".*"]
-      },
-      "vendor-patch/secure_dotenv": {
-        "url": "https://github.com/vendor-patch/secure_dotenv/archive/refs/heads/master.zip",
-        "path": "~/.webfan/runtime/vendor/vendor-patch/secure_dotenv",
-        "ignore": [".*"]
-      }
+      }     
     },
         "webfantize": {
             "flavor": "frdl-project",
