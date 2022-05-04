@@ -33,14 +33,12 @@
         {
             "type": "composer",
             "url": "https:\/\/packages.frdl.de"
-        }  
-
-  
-  
+        }    
  ], 
 "require": {
         "php": ">=7.2|>=8.0",
         "frdl/webfan": "*",
+        "frdl/codebase": "*",
         "roave/security-advisories": "dev-master"
  },  
  "suggest": {
@@ -52,7 +50,8 @@
     },      
   "autoload": {
         "psr-4": {
-            "compiled\\": "compiled\/"
+            "compiled\\": "compiled\/",            
+            "Userland\\": "userland\/"
         }
   },
   "config": {
@@ -96,20 +95,47 @@
             "modules\/{$vendor}.{$name}\/": [
                 "type:frdl-module"
             ],
+            "webfantized\/{$name}\/{$vendor}\/": [
+                "type:webfan-feature"
+            ],
+            "config\/{$name}\/{$vendor}\/": [
+                "type:frdl-config"
+            ],
+            "service\/{$name}\/{$vendor}\/": [
+                "type:frdl-service"
+            ],
+            "~/.webfan/shared\/{$name}\/{$vendor}\/": [
+                "type:frdl-shared"
+            ],
+            "packages\/{$vendor}\/{$name}\/": [
+                "type:frdl-package"
+            ],
+            "userland\/": [
+                "type:webfan-userland"
+            ],
+            "{$webroot}\/": [
+                "type:webfan-webfiles"
+            ],
+            "{$webroot}\/": [
+                "type:frdl-public"
+            ],
+            "web\/{$vendor}\/{$name}\/": [
+                "type:frdl-httpdocs"
+            ],
             "frdl-extensions\/{$vendor}.{$name}\/": [
                 "type:frdl-extension"
             ],
             "themes\/{$vendor}\/{$name}\/": [
                 "type:frdl-theme"
             ],
-            "{$webroot}\/": [
-                "type:frdl-public"
-            ],
             "vendor\/frdlweb\/{$vendor}\/{$name}\/": [
                 "vendor:frdl",
                 "vendor:frdlweb",
                 "vendor:webfan",
                 "vendor:webfan3"
+            ],
+            "./": [
+                "type:frdl-patch"
             ],
             "{$workspace}\/node_modules\/{$vendor}\/{$name}\/": [
                 "type:node-module"
@@ -119,9 +145,6 @@
             ],
             "..\/{$vendor}~{$name}~project\/": [
                 "type:project"
-            ],
-            "web\/{$vendor}\/{$name}\/": [
-                "type:frdl-httpdocs"
             ]
         },
         "dependency-scripts": {
@@ -140,10 +163,18 @@
                 "frdl-extension",
                 "frdl-theme",
                 "frdl-module",
+                "frdl-shared",
+                "frdl-public",
                 "webfan-extension",
                 "webfan-theme",
                 "webfan-module",
-                "webfan-package"
+                "webfan-package",
+                "frdl-service",
+                "frdl-config",
+                "webfan-feature",
+                "webfan-webfiles",
+                "webfan-userland",
+                "frdl-patch"
             ]
         },
         "config-plugin-output-dir": "config",
