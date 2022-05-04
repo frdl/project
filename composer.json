@@ -55,7 +55,7 @@
         }
   },
   "config": {
-        "bin-dir": "~/.webfan/runtime/.bin",
+        "bin-dir": "~/.webfan/bin",
         "preferred-install": "auto",
         "cache-files-ttl": 3600,
         "prepend-autoloader": true
