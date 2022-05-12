@@ -4,7 +4,7 @@
  "description": "Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application. ",
  "keywords" : ["1.3.6.1.4.1.37553.8.1.8.8.11", "1.3.6.1.4.1.37553.8.1.8.8.11.1"],
  "license": ["MIT"],
- "homepage" : "https://github.com/frdl/project",  
+ "homepage" : "https://webfan.de/apps/webmaster/",  
  "require": {
         "php": ">=7.2|>=8.0",
         "frdl/webfan": ">=2.0.16",
@@ -29,7 +29,7 @@
         "preferred-install": "auto",
         "cache-files-ttl": 3600,
         "prepend-autoloader": true,			        
-		       "allow-plugins": {
+        "allow-plugins": {
             "civicrm/*": true,
             "frdl/*": true,
             "webfan3/*": true
@@ -72,9 +72,12 @@
       }     
     },
         "webfantize": {
-            "flavor": "frdl-project",
-            "oid": "1.3.6.1.4.1.37553.8.1.8.8.11.1"
-        },
+	   "flavor" : {
+               "1.3.6.1.4.1.37553.8.1.8.1.575874" : true,
+               "1.3.6.1.4.1.37553.8.1.8.8.11.1" : true,
+	       "1.3.6.1.4.1.37553.8.1.8.1.575874" : false
+	   }
+	},
         "installer-types": [
             "frdl-extension",
             "frdl-theme",
