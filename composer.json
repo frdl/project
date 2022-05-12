@@ -7,8 +7,8 @@
  "homepage" : "https://webfan.de/apps/webmaster/",  
  "require": {
         "php": ">=7.2|>=8.0",
-        "frdl/webfan": ">=2.0.16",
-        "frdl/codebase": ">=v0.0.19",
+        "frdl/webfan": "*",
+        "frdl/codebase": "*",
         "roave/security-advisories": "dev-master"
   },  
  "suggest": {
@@ -42,8 +42,7 @@
             "webroot" : "public",
             "root" : "."
         }
- },
-	
+ },	
 "scripts": {
    "UNCOMMENT_IF_pre-install-cmd": [
          "-d memory_limit=-1 composer self-update --2"
