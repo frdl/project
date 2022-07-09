@@ -1,0 +1,195 @@
+{
+ "name": "frdl/project",
+ "type": "project",
+ "description": "Kickstarter boilerplate to be used by `composer create-project` command. Demo/Test Application. ",
+ "keywords" : ["1.3.6.1.4.1.37553.8.1.8.8.11", "1.3.6.1.4.1.37553.8.1.8.8.11.1"],
+ "license": ["MIT"],
+ "homepage" : "https://webfan.de/apps/webmaster/",  
+ "require": {
+        "php": ">=7.2|>=8.0",
+        "frdl/webfan": "*",
+        "frdl/codebase": ">=0.0.21",
+        "roave/security-advisories": "dev-master",
+		"frdl/auth" : "*",
+		"frdl/cms" : "*",     
+		"rosell-dk/image-mime-type-guesser": "^0.3",
+      "league/commonmark": "*",
+      "mustangostang/spyc": "^0.6",
+	"minicli/minicli" : "*",
+	"league/flysystem-sftp" : "*",
+	"league/flysystem-webdav"  : "*",
+	"league/flysystem-ziparchive"   : "*"
+  },  
+ "suggest": {
+        "frdl/project" : "Frdlweb Project Template",        
+        "foxy/foxy": "Manage npm depencencies/assets",
+        "frdlweb/app-implementation" : "Implements \\frdlweb\\AppInterface",
+        "frdlweb/runtime-implementation" : "Implements runtime",
+        "frdlweb/workspace-implementation" : "Implements workspace"
+    },      
+  "autoload": {
+        "psr-4": {
+            "compiled\\": "compiled\/",            
+            "Userland\\": "userland\/"
+        }
+  },
+  "config": {
+        "bin-dir": "./bin",
+        "preferred-install": "auto",
+        "cache-files-ttl": 3600,
+        "prepend-autoloader": true,			        
+        "allow-plugins": {
+            "civicrm/*": true,
+            "frdl/*": true,
+            "webfan3/*": true
+        },
+        "frdl": {
+            "webfantize": [],
+            "level": "level-*"
+        },
+        "webfan-website" : {
+            "webroot" : "public",
+            "root" : "."
+        }
+ },	
+"scripts": {
+   "UNCOMMENT_IF_pre-install-cmd": [
+         "-d memory_limit=-1 composer self-update --2"
+    ], 
+    "post-root-package-install": [
+        "php ./bin/php-legal-licenses generate --hide-version"
+    ],
+    "post-create-project-cmd": [
+        "php ./bin/php-legal-licenses generate --hide-version"
+    ],
+    "post-install-cmd": [
+        "php ./bin/php-legal-licenses generate --hide-version"
+    ],
+    "post-update-cmd": [
+        "php ./bin/php-legal-licenses generate --hide-version"
+    ]
+},
+ "conflict": {},
+ "extra": {
+    "compile-mode": "all",     
+    "foxy": true,
+    "downloads": {
+      "*": {
+        "path": "./vendor/{$id}",
+        "ignore": ["test", "tests", "doc", "docs", ".*"]
+      }     
+    },
+        "webfantize": {
+	   "flavor" : {
+               "1.3.6.1.4.1.37553.8.1.8.1.575874" : true,
+               "1.3.6.1.4.1.37553.8.1.8.8.11.1" : true,
+	       "1.3.6.1.4.1.37553.8.1.8.1.575874" : false
+	   }
+	},
+        "installer-types": [
+            "frdl-extension",
+            "frdl-theme",
+            "frdl-module",
+            "frdl-httpdocs",
+            "frdl-public",         
+            "webfan-package",
+            "webfan-extension",
+            "webfan-theme",
+            "webfan-module",
+            "webfan-httpdocs",
+            "webfan-public",         
+            "vendor",
+            "npm-package",
+            "node-module",
+            "project"
+        ],
+        "installer-paths": {
+            "modules\/{$vendor}.{$name}\/": [
+                "type:frdl-module"
+            ],
+            "webfantized\/{$name}\/{$vendor}\/": [
+                "type:webfan-feature"
+            ],
+            "config\/{$name}\/{$vendor}\/": [
+                "type:frdl-config"
+            ],
+            "service\/{$name}\/{$vendor}\/": [
+                "type:frdl-service"
+            ],
+            "~/.webfan/shared\/{$name}\/{$vendor}\/": [
+                "type:frdl-shared"
+            ],
+            "packages\/{$vendor}\/{$name}\/": [
+                "type:frdl-package"
+            ],
+            "userland\/": [
+                "type:webfan-userland"
+            ],
+            "{$webroot}\/": [
+                "type:webfan-webfiles"
+            ],
+            "{$webroot}\/": [
+                "type:frdl-public"
+            ],
+            "public\/": [
+                "type:frdl-httpdocs"
+            ],
+            "frdl-extensions\/{$vendor}.{$name}\/": [
+                "type:frdl-extension"
+            ],
+            "themes\/{$vendor}\/{$name}\/": [
+                "type:frdl-theme"
+            ],
+            "vendor\/frdlweb\/{$vendor}\/{$name}\/": [
+                "vendor:frdl",
+                "vendor:frdlweb",
+                "vendor:webfan",
+                "vendor:webfan3"
+            ],
+            "./": [
+                "type:frdl-patch"
+            ],
+            "{$workspace}\/node_modules\/{$vendor}\/{$name}\/": [
+                "type:node-module"
+            ],
+            "assets\/node_modules\/{$vendor}\/{$name}\/": [
+                "type:npm-package"
+            ],
+            "..\/{$vendor}~{$name}~project\/": [
+                "type:project"
+            ]
+        },
+        "dependency-scripts": {
+            "run": true,
+            "trust": [
+                "symfony",
+                "symfony\/symfony",
+                "symfony\/console",
+                "frdl\/console",
+                "frdl\/*",
+                "webfan3\/*",
+                "wehowski\/*"
+            ],
+            "exclude": [],
+            "types": [
+                "frdl-extension",
+                "frdl-theme",
+                "frdl-module",
+                "frdl-shared",
+                "frdl-public",
+                "webfan-extension",
+                "webfan-theme",
+                "webfan-module",
+                "webfan-package",
+                "frdl-service",
+                "frdl-config",
+                "webfan-feature",
+                "webfan-webfiles",
+                "webfan-userland",
+                "frdl-patch"
+            ]
+        },
+        "config-plugin-output-dir": "config"
+    },
+    "minimum-stability": "dev"
+}
